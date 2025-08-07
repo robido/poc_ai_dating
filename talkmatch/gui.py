@@ -9,6 +9,7 @@ from tkinter import scrolledtext
 
 from .chat import ChatSession, FakeUser
 from .ai import AIClient
+from .personas import PERSONAS, Persona
 
 
 GREETING_MESSAGE = (
@@ -127,9 +128,84 @@ class LoginWindow:
         self.chat_window = None
 
 
+class ChatPane(tk.Frame):
+    """Base frame for displaying a single chat conversation."""
+
+    def __init__(self, master: tk.Misc, session: ChatSession):
+        super().__init__(master)
+        self.session = session
+        self.chat_area = scrolledtext.ScrolledText(self, state="disabled", width=40, height=20)
+        self.chat_area.pack(fill=tk.BOTH, expand=True)
+
+    def display_message(self, role: str, content: str) -> None:
+        self.chat_area.configure(state="normal")
+        self.chat_area.insert(tk.END, f"{role}: {content}\n")
+        self.chat_area.configure(state="disabled")
+        self.chat_area.yview(tk.END)
+
+
+class UserChatPane(ChatPane):
+    """Chat pane for the real user with text input."""
+
+    def __init__(self, master: tk.Misc):
+        session = ChatSession(AIClient())
+        super().__init__(master, session)
+        self.entry = tk.Entry(self)
+        self.entry.pack(fill=tk.X, padx=5, pady=5)
+        self.entry.bind("<Return>", lambda event: self.send())
+        tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
+
+        self.display_message("AI", GREETING_MESSAGE)
+        self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
+
+    def send(self) -> None:
+        text = self.entry.get().strip()
+        if not text:
+            return
+        self.entry.delete(0, tk.END)
+        self.display_message("You", text)
+
+        def run() -> None:
+            delay = random.randint(5, 10)
+            time.sleep(delay)
+            reply = self.session.send_user_message(text)
+            self.after(0, lambda: self.display_message("AI", reply))
+
+        threading.Thread(target=run, daemon=True).start()
+
+
+class PersonaChatPane(ChatPane):
+    """Chat pane representing an AI persona chatting with the assistant."""
+
+    def __init__(self, master: tk.Misc, persona: Persona):
+        session = ChatSession(AIClient())
+        super().__init__(master, session)
+        self.persona = persona
+        self.persona_ai = AIClient()
+        tk.Button(self, text="Next", command=self.next_message).pack(pady=(0, 5))
+
+        self.display_message("AI", GREETING_MESSAGE)
+        self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
+
+    def next_message(self) -> None:
+        context = [{"role": "system", "content": self.persona.system_prompt}]
+        context.extend(self.session.messages[1:])
+        persona_msg = self.persona_ai.get_response(context)
+        self.display_message(self.persona.name, persona_msg)
+        reply = self.session.send_user_message(persona_msg)
+        self.display_message("AI", reply)
+
+
 def run_app() -> None:
-    """Entry point to run the GUI application."""
+    """Display the user and persona chats side-by-side."""
     root = tk.Tk()
-    session = ChatSession(AIClient())
-    LoginWindow(root, session)
+    root.title("TalkMatch")
+
+    user_pane = UserChatPane(root)
+    user_pane.grid(row=0, column=0, padx=5, pady=5)
+
+    for idx, persona in enumerate(PERSONAS, start=1):
+        pane = PersonaChatPane(root, persona)
+        pane.grid(row=0, column=idx, padx=5, pady=5)
+
     root.mainloop()
