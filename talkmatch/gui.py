@@ -1,15 +1,16 @@
 """Tkinter GUI for the TalkMatch Phase 0 prototype."""
 from __future__ import annotations
 
-import random
 import threading
 import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import scrolledtext
+from typing import Dict, List, Tuple
 
 from .chat import ChatSession, FakeUser
 from .ai import AIClient
+from .matcher import Matcher
 from .personas import PERSONAS, Persona
 
 
@@ -154,9 +155,20 @@ class ChatPane(tk.Frame):
         tk.Label(self, text=title, font=("Helvetica", 12, "bold")).pack()
         self.chat_area = scrolledtext.ScrolledText(self, state="disabled", width=50, height=20, font=("Helvetica", 12))
         self.chat_area.pack(fill=tk.BOTH, expand=True)
+        self.match_area = tk.Text(self, state="disabled", height=5, font=("Helvetica", 10))
 
     def add_profile_button(self) -> None:
         tk.Button(self, text="Show Profile", command=self.show_profile).pack(pady=(0, 5))
+
+    def add_match_area(self) -> None:
+        self.match_area.pack(fill=tk.BOTH, expand=False, padx=5, pady=5)
+
+    def update_match_display(self, matches: List[Tuple[str, float]]) -> None:
+        self.match_area.configure(state="normal")
+        self.match_area.delete("1.0", tk.END)
+        for name, score in matches:
+            self.match_area.insert(tk.END, f"{name}: {score:.2f}\n")
+        self.match_area.configure(state="disabled")
 
     def show_profile(self) -> None:
         data = self.session.profile_store.read(self.client_name)
@@ -188,6 +200,7 @@ class UserChatPane(ChatPane):
         self.entry.bind("<Return>", lambda event: self.send())
         tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
         self.add_profile_button()
+        self.add_match_area()
 
         greeting = make_greeting(USER_NAME)
         self.display_message("Ambassador", greeting)
@@ -218,6 +231,7 @@ class PersonaChatPane(ChatPane):
         self.persona_ai = AIClient()
         tk.Button(self, text="Next", command=self.next_message).pack(pady=(0, 5))
         self.add_profile_button()
+        self.add_match_area()
 
         greeting = make_greeting(persona.name)
         self.display_message("Ambassador", greeting)
@@ -245,11 +259,26 @@ def run_app() -> None:
     root = tk.Tk()
     root.title("TalkMatch")
 
+    all_users = [USER_NAME] + [p.name for p in PERSONAS]
+    matcher = Matcher(all_users)
+    panes: Dict[str, ChatPane] = {}
+
     user_pane = UserChatPane(root)
     user_pane.grid(row=0, column=0, padx=5, pady=5)
+    panes[USER_NAME] = user_pane
 
     for idx, persona in enumerate(PERSONAS, start=1):
         pane = PersonaChatPane(root, persona)
         pane.grid(row=0, column=idx, padx=5, pady=5)
+        panes[persona.name] = pane
+
+    def calculate() -> None:
+        matcher.calculate()
+        for name, pane in panes.items():
+            pane.update_match_display(matcher.top_matches(name))
+
+    tk.Button(root, text="Calculate matches", command=calculate).grid(
+        row=1, column=0, columnspan=len(panes), pady=5
+    )
 
     root.mainloop()
