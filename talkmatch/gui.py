@@ -192,8 +192,13 @@ class PersonaChatPane(ChatPane):
         context.extend(self.session.messages[1:])
         persona_msg = self.persona_ai.get_response(context)
         self.display_message(self.persona.name, persona_msg)
-        reply = self.session.send_user_message(persona_msg)
-        self.display_message("AI", reply)
+        def run() -> None:
+            delay = random.randint(5, 10)
+            time.sleep(delay)
+            reply = self.session.send_user_message(persona_msg)
+            self.after(0, lambda: self.display_message("AI", reply))
+
+        threading.Thread(target=run, daemon=True).start()
 
 
 def run_app() -> None:
