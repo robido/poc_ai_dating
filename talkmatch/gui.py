@@ -59,6 +59,8 @@ class ChatWindow(tk.Toplevel):
         send_btn = tk.Button(self, text="Send", command=self.send_message)
         send_btn.pack(pady=(0, 5))
 
+        tk.Button(self, text="Show Profile", command=self.show_profile).pack(pady=(0, 5))
+
         self.display_message("Ambassador", GREETING_MESSAGE)
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -85,10 +87,16 @@ class ChatWindow(tk.Toplevel):
         def run() -> None:
             delay = random.randint(5, 10)
             time.sleep(delay)
-            reply = self.session.send_user_message(text)
+            reply = self.session.send_client_message(USER_NAME, text)
             self.after(0, lambda: self.display_message("Other", reply))
 
         threading.Thread(target=run, daemon=True).start()
+
+    def show_profile(self) -> None:
+        data = self.session.profile_store.read(USER_NAME)
+        popup = tk.Toplevel(self)
+        popup.title("Known about you")
+        tk.Message(popup, text=data or "No data yet.", width=300).pack(padx=10, pady=10)
 
     def close(self) -> None:
         if self._on_close:
@@ -152,9 +160,19 @@ class ChatPane(tk.Frame):
     def __init__(self, master: tk.Misc, session: ChatSession, title: str):
         super().__init__(master)
         self.session = session
+        self.client_name = title
         tk.Label(self, text=title, font=("Helvetica", 12, "bold")).pack()
         self.chat_area = scrolledtext.ScrolledText(self, state="disabled", width=50, height=20, font=("Helvetica", 12))
         self.chat_area.pack(fill=tk.BOTH, expand=True)
+
+    def add_profile_button(self) -> None:
+        tk.Button(self, text="Show Profile", command=self.show_profile).pack(pady=(0, 5))
+
+    def show_profile(self) -> None:
+        data = self.session.profile_store.read(self.client_name)
+        popup = tk.Toplevel(self)
+        popup.title(f"{self.client_name} profile")
+        tk.Message(popup, text=data or "No data yet.", width=300).pack(padx=10, pady=10)
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
@@ -179,6 +197,7 @@ class UserChatPane(ChatPane):
         self.entry.pack(fill=tk.X, padx=5, pady=5)
         self.entry.bind("<Return>", lambda event: self.send())
         tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
+        self.add_profile_button()
 
         self.display_message("Ambassador", GREETING_MESSAGE)
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
@@ -193,7 +212,7 @@ class UserChatPane(ChatPane):
         def run() -> None:
             delay = random.randint(5, 10)
             time.sleep(delay)
-            reply = self.session.send_user_message(text)
+            reply = self.session.send_client_message(USER_NAME, text)
             self.after(0, lambda: self.display_message("Ambassador", reply))
 
         threading.Thread(target=run, daemon=True).start()
@@ -208,6 +227,7 @@ class PersonaChatPane(ChatPane):
         self.persona = persona
         self.persona_ai = AIClient()
         tk.Button(self, text="Next", command=self.next_message).pack(pady=(0, 5))
+        self.add_profile_button()
 
         self.display_message("Ambassador", GREETING_MESSAGE)
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
@@ -222,7 +242,7 @@ class PersonaChatPane(ChatPane):
             def reply_worker() -> None:
                 delay = random.randint(5, 10)
                 time.sleep(delay)
-                reply = self.session.send_user_message(persona_msg)
+                reply = self.session.send_client_message(self.persona.name, persona_msg)
                 self.after(0, lambda: self.display_message("Ambassador", reply))
 
             threading.Thread(target=reply_worker, daemon=True).start()
