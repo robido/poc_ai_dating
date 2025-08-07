@@ -285,3 +285,11 @@ Quickly develop a locally running Python-based prototype to demo and validate th
 ---
 
 This MVP spec is intentionally scoped to launch with a compelling, usable version of the product while deferring more complex features like real-time voice, full personality customization, and large-scale recommendation tuning.
+
+## Running the Phase 0 Prototype
+
+1. Install dependencies: `pip install -r requirements.txt`
+2. Set an `OPENAI_API_KEY` environment variable.
+3. Run the desktop app: `python main.py`
+
+Unit tests mock the AI layer. Run them with `pytest`.
