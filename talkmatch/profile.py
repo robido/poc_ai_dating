@@ -25,8 +25,9 @@ class ProfileStore:
 
         path = self.base_dir / f"{user}.txt"
         existing = path.read_text(encoding="utf-8").strip() if path.exists() else ""
-        combined = f"{existing}\n{text}" if existing else text
-        prompt = self.prompt_template.replace("{info}", combined)
+        prompt = (
+            self.prompt_template.replace("{info}", existing).replace("{messages}", text)
+        )
         response = ai_client.get_response([{"role": "user", "content": prompt}])
         path.write_text(response + "\n", encoding="utf-8")
 
