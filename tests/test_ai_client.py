@@ -21,3 +21,5 @@ def test_ai_client_returns_text():
 
     assert result == "Hi there"
     instance.chat.completions.create.assert_called_once()
+    _, kwargs = instance.chat.completions.create.call_args
+    assert kwargs.get("max_tokens") == client.max_tokens
