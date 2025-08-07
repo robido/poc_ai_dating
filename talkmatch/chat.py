@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 from .ai import AIClient
+from .profile import ProfileStore
 
 
 @dataclass
@@ -27,13 +28,19 @@ class ChatSession:
     """Manages conversation state and talks to the AI or a fake user."""
 
     ai_client: AIClient
-    messages: List[Dict[str, str]] = field(default_factory=lambda: [
-        {"role": "system", "content": "You are TalkMatch, an AI dating assistant."}
-    ])
+    profile_store: ProfileStore = field(default_factory=ProfileStore)
+    messages: List[Dict[str, str]] = field(
+        default_factory=lambda: [
+            {"role": "system", "content": "You are TalkMatch, an AI dating assistant."}
+        ]
+    )
     fake_user: Optional[FakeUser] = None
 
-    def send_user_message(self, text: str) -> str:
+    def send_client_message(self, name: str, text: str) -> str:
+        """Handle a message from any client (user or persona)."""
+
         self.messages.append({"role": "user", "content": text})
+        self.profile_store.append(name, text)
         if self.fake_user:
             reply = self.fake_user.get_reply()
         else:
