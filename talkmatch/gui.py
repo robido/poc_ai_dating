@@ -8,12 +8,28 @@ from .chat import ChatSession, FakeUser
 from .ai import AIClient
 
 
+GREETING_MESSAGE = (
+    "Hi Jane! I’m an AI — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.\n\n"
+    "Think of me as your ambassador. I’m here to help guide conversations and connect you with other humans.\n\n"
+    "Just chat with me naturally, like you’re at a speed-dating or networking event. As we talk, I’ll get to know you — your style, your vibe, how you connect — and I’ll do the same with others.\n\n"
+    "When it feels right, I’ll gradually step aside and let a real human take over. You may not even notice when it happens. Sometimes I will also take a while to respond, like a real-human, to make this feel as natural as possible for you.\n\n"
+    "If things get dull or awkward, I’ll quietly step back in and continue matching you — always through this same, seamless chat window.\n\n"
+    "Stick with someone long enough, and if a real connection is forming, I’ll step out completely. That’s when you’ll be officially matched and able to chat privately, without me.\n\n"
+    "Sound good? 😊 Just let me know when you’re ready to start.\n\n"
+    "Remember:\n\n"
+    "Stay kind.\n"
+    "Assume it’s always a real person.\n"
+    "Be yourself. Good luck 💫"
+)
+
+
 class ChatWindow(tk.Toplevel):
     """User chat interface."""
 
-    def __init__(self, master: tk.Misc, session: ChatSession):
+    def __init__(self, master: tk.Misc, session: ChatSession, on_close=None):
         super().__init__(master)
         self.session = session
+        self._on_close = on_close
         self.title("TalkMatch Chat")
         self.geometry("400x500")
 
@@ -26,6 +42,10 @@ class ChatWindow(tk.Toplevel):
 
         send_btn = tk.Button(self, text="Send", command=self.send_message)
         send_btn.pack(pady=(0, 5))
+
+        self.display_message("AI", GREETING_MESSAGE)
+        self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
+        self.protocol("WM_DELETE_WINDOW", self.close)
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
@@ -41,6 +61,11 @@ class ChatWindow(tk.Toplevel):
         self.display_message("You", text)
         reply = self.session.send_user_message(text)
         self.display_message("Other", reply)
+
+    def close(self) -> None:
+        if self._on_close:
+            self._on_close()
+        self.destroy()
 
 
 class AdminWindow(tk.Toplevel):
@@ -73,6 +98,7 @@ class LoginWindow:
     def __init__(self, root: tk.Tk, session: ChatSession):
         self.root = root
         self.session = session
+        self.chat_window = None
         root.title("TalkMatch")
         root.geometry("300x150")
 
@@ -80,10 +106,16 @@ class LoginWindow:
         tk.Button(root, text="Admin Login", command=self.open_admin).pack(pady=10)
 
     def open_chat(self) -> None:
-        ChatWindow(self.root, self.session)
+        if self.chat_window and self.chat_window.winfo_exists():
+            self.chat_window.lift()
+            return
+        self.chat_window = ChatWindow(self.root, self.session, on_close=self._chat_closed)
 
     def open_admin(self) -> None:
         AdminWindow(self.root, self.session)
+
+    def _chat_closed(self) -> None:
+        self.chat_window = None
 
 
 def run_app() -> None:
