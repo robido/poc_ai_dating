@@ -1,6 +1,9 @@
 """Tkinter GUI for the TalkMatch Phase 0 prototype."""
 from __future__ import annotations
 
+import random
+import threading
+import time
 import tkinter as tk
 from tkinter import scrolledtext
 
@@ -39,8 +42,14 @@ class ChatWindow(tk.Toplevel):
             return
         self.entry.delete(0, tk.END)
         self.display_message("You", text)
-        reply = self.session.send_user_message(text)
-        self.display_message("Other", reply)
+
+        def run() -> None:
+            delay = random.randint(5, 10)
+            time.sleep(delay)
+            reply = self.session.send_user_message(text)
+            self.after(0, lambda: self.display_message("Other", reply))
+
+        threading.Thread(target=run, daemon=True).start()
 
 
 class AdminWindow(tk.Toplevel):
