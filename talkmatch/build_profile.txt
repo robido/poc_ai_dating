@@ -10,3 +10,4 @@ Based on this additional chat information, update the info as necessary. Focus o
 - that helps the AI mimic the user accurately with other users to evaluate a potential match
 - that helps the AI talk with the user (simulate a conversation as a potential match)
 - that helps the AI know the person as best as possible for eventually matching with other users
+The profile is not displayed to the user, so favor high information density over presentation.
