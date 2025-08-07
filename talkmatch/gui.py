@@ -12,8 +12,12 @@ from .ai import AIClient
 from .personas import PERSONAS, Persona
 
 
+USER_NAME = "Dominic"
+ROLE_COLORS = {USER_NAME: "blue", "AI": "green", "Other": "purple"}
+
+
 GREETING_MESSAGE = (
-    "Hi Jane! I’m an AI — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.\n\n"
+    "Hi Dominic! I’m an AI — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.\n\n"
     "Think of me as your ambassador. I’m here to help guide conversations and connect you with other humans.\n\n"
     "Just chat with me naturally, like you’re at a speed-dating or networking event. As we talk, I’ll get to know you — your style, your vibe, how you connect — and I’ll do the same with others.\n\n"
     "When it feels right, I’ll gradually step aside and let a real human take over. You may not even notice when it happens. Sometimes I will also take a while to respond, like a real-human, to make this feel as natural as possible for you.\n\n"
@@ -37,10 +41,14 @@ class ChatWindow(tk.Toplevel):
         self.title("TalkMatch Chat")
         self.geometry("400x500")
 
-        self.chat_area = scrolledtext.ScrolledText(self, state="disabled")
+        tk.Label(self, text=USER_NAME, font=("Helvetica", 12, "bold")).pack()
+        self.chat_area = scrolledtext.ScrolledText(self, state="disabled", font=("Helvetica", 12))
+        self.chat_area.tag_config(USER_NAME, foreground=ROLE_COLORS[USER_NAME])
+        self.chat_area.tag_config("AI", foreground=ROLE_COLORS["AI"])
+        self.chat_area.tag_config("Other", foreground=ROLE_COLORS["Other"])
         self.chat_area.pack(fill=tk.BOTH, expand=True)
 
-        self.entry = tk.Entry(self)
+        self.entry = tk.Entry(self, font=("Helvetica", 12))
         self.entry.pack(fill=tk.X, padx=5, pady=5)
         self.entry.bind("<Return>", lambda event: self.send_message())
 
@@ -53,7 +61,10 @@ class ChatWindow(tk.Toplevel):
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        self.chat_area.insert(tk.END, f"{role}: {content}\n")
+        if role not in self.chat_area.tag_names():
+            color = ROLE_COLORS.get(role, "purple")
+            self.chat_area.tag_config(role, foreground=color)
+        self.chat_area.insert(tk.END, f"{role}: {content}\n", role)
         self.chat_area.configure(state="disabled")
         self.chat_area.yview(tk.END)
 
@@ -62,7 +73,7 @@ class ChatWindow(tk.Toplevel):
         if not text:
             return
         self.entry.delete(0, tk.END)
-        self.display_message("You", text)
+        self.display_message(USER_NAME, text)
 
         def run() -> None:
             delay = random.randint(5, 10)
@@ -131,15 +142,19 @@ class LoginWindow:
 class ChatPane(tk.Frame):
     """Base frame for displaying a single chat conversation."""
 
-    def __init__(self, master: tk.Misc, session: ChatSession):
+    def __init__(self, master: tk.Misc, session: ChatSession, title: str):
         super().__init__(master)
         self.session = session
-        self.chat_area = scrolledtext.ScrolledText(self, state="disabled", width=40, height=20)
+        tk.Label(self, text=title, font=("Helvetica", 12, "bold")).pack()
+        self.chat_area = scrolledtext.ScrolledText(self, state="disabled", width=50, height=20, font=("Helvetica", 12))
         self.chat_area.pack(fill=tk.BOTH, expand=True)
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        self.chat_area.insert(tk.END, f"{role}: {content}\n")
+        if role not in self.chat_area.tag_names():
+            color = ROLE_COLORS.get(role, "purple")
+            self.chat_area.tag_config(role, foreground=color)
+        self.chat_area.insert(tk.END, f"{role}: {content}\n", role)
         self.chat_area.configure(state="disabled")
         self.chat_area.yview(tk.END)
 
@@ -149,8 +164,8 @@ class UserChatPane(ChatPane):
 
     def __init__(self, master: tk.Misc):
         session = ChatSession(AIClient())
-        super().__init__(master, session)
-        self.entry = tk.Entry(self)
+        super().__init__(master, session, USER_NAME)
+        self.entry = tk.Entry(self, font=("Helvetica", 12))
         self.entry.pack(fill=tk.X, padx=5, pady=5)
         self.entry.bind("<Return>", lambda event: self.send())
         tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
@@ -163,7 +178,7 @@ class UserChatPane(ChatPane):
         if not text:
             return
         self.entry.delete(0, tk.END)
-        self.display_message("You", text)
+        self.display_message(USER_NAME, text)
 
         def run() -> None:
             delay = random.randint(5, 10)
@@ -179,7 +194,7 @@ class PersonaChatPane(ChatPane):
 
     def __init__(self, master: tk.Misc, persona: Persona):
         session = ChatSession(AIClient())
-        super().__init__(master, session)
+        super().__init__(master, session, persona.name)
         self.persona = persona
         self.persona_ai = AIClient()
         tk.Button(self, text="Next", command=self.next_message).pack(pady=(0, 5))
@@ -188,17 +203,21 @@ class PersonaChatPane(ChatPane):
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
 
     def next_message(self) -> None:
-        context = [{"role": "system", "content": self.persona.system_prompt}]
-        context.extend(self.session.messages[1:])
-        persona_msg = self.persona_ai.get_response(context)
-        self.display_message(self.persona.name, persona_msg)
-        def run() -> None:
-            delay = random.randint(5, 10)
-            time.sleep(delay)
-            reply = self.session.send_user_message(persona_msg)
-            self.after(0, lambda: self.display_message("AI", reply))
+        def worker() -> None:
+            context = [{"role": "system", "content": self.persona.system_prompt}]
+            context.extend(self.session.messages[1:])
+            persona_msg = self.persona_ai.get_response(context)
+            self.after(0, lambda: self.display_message(self.persona.name, persona_msg))
 
-        threading.Thread(target=run, daemon=True).start()
+            def reply_worker() -> None:
+                delay = random.randint(5, 10)
+                time.sleep(delay)
+                reply = self.session.send_user_message(persona_msg)
+                self.after(0, lambda: self.display_message("AI", reply))
+
+            threading.Thread(target=reply_worker, daemon=True).start()
+
+        threading.Thread(target=worker, daemon=True).start()
 
 
 def run_app() -> None:
