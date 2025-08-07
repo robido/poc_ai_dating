@@ -13,22 +13,26 @@ from .personas import PERSONAS, Persona
 
 
 USER_NAME = "Dominic"
-ROLE_COLORS = {USER_NAME: "blue", "AI": "green", "Other": "purple"}
+ROLE_COLORS = {USER_NAME: "blue", "Ambassador": "green", "Other": "purple"}
 
 
-GREETING_MESSAGE = (
-    "Hi Dominic! I’m an AI — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.\n\n"
-    "Think of me as your ambassador. I’m here to help guide conversations and connect you with other humans.\n\n"
-    "Just chat with me naturally, like you’re at a speed-dating or networking event. As we talk, I’ll get to know you — your style, your vibe, how you connect — and I’ll do the same with others.\n\n"
-    "When it feels right, I’ll gradually step aside and let a real human take over. You may not even notice when it happens. Sometimes I will also take a while to respond, like a real-human, to make this feel as natural as possible for you.\n\n"
-    "If things get dull or awkward, I’ll quietly step back in and continue matching you — always through this same, seamless chat window.\n\n"
-    "Stick with someone long enough, and if a real connection is forming, I’ll step out completely. That’s when you’ll be officially matched and able to chat privately, without me.\n\n"
-    "Sound good? 😊 Just let me know when you’re ready to start.\n\n"
-    "Remember:\n\n"
-    "Stay kind.\n"
-    "Assume it’s always a real person.\n"
-    "Be yourself. Good luck 💫"
-)
+def make_greeting(name: str) -> str:
+    return (
+        f"Hi {name}! I’m Ambassador — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.\n\n"
+        "Think of me as your ambassador. I’m here to help guide conversations and connect you with other humans.\n\n"
+        "Just chat with me naturally, like you’re at a speed-dating or networking event. As we talk, I’ll get to know you — your style, your vibe, how you connect — and I’ll do the same with others.\n\n"
+        "When it feels right, I’ll gradually step aside and let a real human take over. You may not even notice when it happens. Sometimes I will also take a while to respond, like a real-human, to make this feel as natural as possible for you.\n\n"
+        "If things get dull or awkward, I’ll quietly step back in and continue matching you — always through this same, seamless chat window.\n\n"
+        "Stick with someone long enough, and if a real connection is forming, I’ll step out completely. That’s when you’ll be officially matched and able to chat privately, without me.\n\n"
+        "Sound good? 😊 Just let me know when you’re ready to start.\n\n"
+        "Remember:\n\n"
+        "Stay kind.\n"
+        "Assume it’s always a real person.\n"
+        "Be yourself. Good luck 💫"
+    )
+
+
+GREETING_MESSAGE = make_greeting(USER_NAME)
 
 
 class ChatWindow(tk.Toplevel):
@@ -44,7 +48,7 @@ class ChatWindow(tk.Toplevel):
         tk.Label(self, text=USER_NAME, font=("Helvetica", 12, "bold")).pack()
         self.chat_area = scrolledtext.ScrolledText(self, state="disabled", font=("Helvetica", 12))
         self.chat_area.tag_config(USER_NAME, foreground=ROLE_COLORS[USER_NAME])
-        self.chat_area.tag_config("AI", foreground=ROLE_COLORS["AI"])
+        self.chat_area.tag_config("Ambassador", foreground=ROLE_COLORS["Ambassador"])
         self.chat_area.tag_config("Other", foreground=ROLE_COLORS["Other"])
         self.chat_area.pack(fill=tk.BOTH, expand=True)
 
@@ -55,16 +59,19 @@ class ChatWindow(tk.Toplevel):
         send_btn = tk.Button(self, text="Send", command=self.send_message)
         send_btn.pack(pady=(0, 5))
 
-        self.display_message("AI", GREETING_MESSAGE)
+        self.display_message("Ambassador", GREETING_MESSAGE)
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
         self.protocol("WM_DELETE_WINDOW", self.close)
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        if role not in self.chat_area.tag_names():
+        name_tag = f"{role}_name"
+        if name_tag not in self.chat_area.tag_names():
             color = ROLE_COLORS.get(role, "purple")
             self.chat_area.tag_config(role, foreground=color)
-        self.chat_area.insert(tk.END, f"{role}: {content}\n", role)
+            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 12, "bold"))
+        self.chat_area.insert(tk.END, f"{role}: ", name_tag)
+        self.chat_area.insert(tk.END, f"{content}\n\n", role)
         self.chat_area.configure(state="disabled")
         self.chat_area.yview(tk.END)
 
@@ -151,10 +158,13 @@ class ChatPane(tk.Frame):
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        if role not in self.chat_area.tag_names():
+        name_tag = f"{role}_name"
+        if name_tag not in self.chat_area.tag_names():
             color = ROLE_COLORS.get(role, "purple")
             self.chat_area.tag_config(role, foreground=color)
-        self.chat_area.insert(tk.END, f"{role}: {content}\n", role)
+            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 12, "bold"))
+        self.chat_area.insert(tk.END, f"{role}: ", name_tag)
+        self.chat_area.insert(tk.END, f"{content}\n\n", role)
         self.chat_area.configure(state="disabled")
         self.chat_area.yview(tk.END)
 
@@ -170,7 +180,7 @@ class UserChatPane(ChatPane):
         self.entry.bind("<Return>", lambda event: self.send())
         tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
 
-        self.display_message("AI", GREETING_MESSAGE)
+        self.display_message("Ambassador", GREETING_MESSAGE)
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
 
     def send(self) -> None:
@@ -184,7 +194,7 @@ class UserChatPane(ChatPane):
             delay = random.randint(5, 10)
             time.sleep(delay)
             reply = self.session.send_user_message(text)
-            self.after(0, lambda: self.display_message("AI", reply))
+            self.after(0, lambda: self.display_message("Ambassador", reply))
 
         threading.Thread(target=run, daemon=True).start()
 
@@ -199,7 +209,7 @@ class PersonaChatPane(ChatPane):
         self.persona_ai = AIClient()
         tk.Button(self, text="Next", command=self.next_message).pack(pady=(0, 5))
 
-        self.display_message("AI", GREETING_MESSAGE)
+        self.display_message("Ambassador", GREETING_MESSAGE)
         self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
 
     def next_message(self) -> None:
@@ -213,7 +223,7 @@ class PersonaChatPane(ChatPane):
                 delay = random.randint(5, 10)
                 time.sleep(delay)
                 reply = self.session.send_user_message(persona_msg)
-                self.after(0, lambda: self.display_message("AI", reply))
+                self.after(0, lambda: self.display_message("Ambassador", reply))
 
             threading.Thread(target=reply_worker, daemon=True).start()
 
