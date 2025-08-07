@@ -15,6 +15,7 @@ from .personas import PERSONAS, Persona
 
 USER_NAME = "Dominic"
 ROLE_COLORS = {USER_NAME: "blue", "Ambassador": "green", "Other": "purple"}
+REPLY_DELAY = 3
 
 # Load the greeting template from a text file and format it with the desired name.
 GREETING_TEMPLATE = Path(__file__).with_name("greeting_template.txt").read_text().strip()
@@ -75,8 +76,7 @@ class ChatWindow(tk.Toplevel):
         self.display_message(USER_NAME, text)
 
         def run() -> None:
-            delay = random.randint(5, 10)
-            time.sleep(delay)
+            time.sleep(REPLY_DELAY)
             reply = self.session.send_client_message(USER_NAME, text)
             self.after(0, lambda: self.display_message("Other", reply))
 
@@ -201,8 +201,7 @@ class UserChatPane(ChatPane):
         self.display_message(USER_NAME, text)
 
         def run() -> None:
-            delay = random.randint(5, 10)
-            time.sleep(delay)
+            time.sleep(REPLY_DELAY)
             reply = self.session.send_client_message(USER_NAME, text)
             self.after(0, lambda: self.display_message("Ambassador", reply))
 
@@ -232,8 +231,7 @@ class PersonaChatPane(ChatPane):
             self.after(0, lambda: self.display_message(self.persona.name, persona_msg))
 
             def reply_worker() -> None:
-                delay = random.randint(5, 10)
-                time.sleep(delay)
+                time.sleep(REPLY_DELAY)
                 reply = self.session.send_client_message(self.persona.name, persona_msg)
                 self.after(0, lambda: self.display_message("Ambassador", reply))
 
