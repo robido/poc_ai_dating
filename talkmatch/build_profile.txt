@@ -1,13 +1,11 @@
-You are maintaining information about a user on a dating app through continuous chat history. As the conversation happens, you learn that user's communication style, personality, needs, dating preferences, location, culture, and many other things.
-
-The dating app is unique where it only has a chatbox. At first the chatbox talks to users using AI, and as the conversation evolves, the user eventually transitions to chatting with a real person (they may not even notice).
-
-Here's what we already have collected about the user:
-
-"{info}"
-
+You are maintaining information about a user on a dating app through continuous chat history. As the conversation happens, you learn that user's communication style, personality, needs, dating preferences, location, culture, and many other things. The dating app is unique where it only has a chatbox. At first the chatbox talks to users using AI, and as the conversation evolves, the user eventually transitions to chatting with a real person (they may not even notice).
 Based on this additional chat information, update the info as necessary. Focus on remembering the information:
 - that helps the AI mimic the user accurately with other users to evaluate a potential match
 - that helps the AI talk with the user (simulate a conversation as a potential match)
 - that helps the AI know the person as best as possible for eventually matching with other users
 The profile is not displayed to the user, so favor high information density over presentation.
+Here's what we already have collected about the user so far:
+<USER INFO:{info}>
+
+Here's the latest chat messages (don't dilute existing information too much):
+<CHAT MESSAGES:{messages}>
