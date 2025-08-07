@@ -1,0 +1,45 @@
+"""Chat session logic for TalkMatch."""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional
+
+from .ai import AIClient
+
+
+@dataclass
+class FakeUser:
+    """A very small fake user that returns scripted responses."""
+
+    responses: List[str]
+    index: int = 0
+
+    def get_reply(self) -> str:
+        if self.index < len(self.responses):
+            reply = self.responses[self.index]
+            self.index += 1
+            return reply
+        return "..."
+
+
+@dataclass
+class ChatSession:
+    """Manages conversation state and talks to the AI or a fake user."""
+
+    ai_client: AIClient
+    messages: List[Dict[str, str]] = field(default_factory=lambda: [
+        {"role": "system", "content": "You are TalkMatch, an AI dating assistant."}
+    ])
+    fake_user: Optional[FakeUser] = None
+
+    def send_user_message(self, text: str) -> str:
+        self.messages.append({"role": "user", "content": text})
+        if self.fake_user:
+            reply = self.fake_user.get_reply()
+        else:
+            reply = self.ai_client.get_response(self.messages)
+        self.messages.append({"role": "assistant", "content": reply})
+        return reply
+
+    def switch_to_fake_user(self, fake_user: FakeUser) -> None:
+        self.fake_user = fake_user
