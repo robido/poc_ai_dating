@@ -1,3 +1,5 @@
 """TalkMatch Phase 0 prototype."""
 
-__all__ = []
+from .matcher import Matcher
+
+__all__ = ["Matcher"]
