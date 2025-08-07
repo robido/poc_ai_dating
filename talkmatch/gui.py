@@ -18,17 +18,7 @@ ROLE_COLORS = {USER_NAME: "blue", "Ambassador": "green", "Other": "purple"}
 
 def make_greeting(name: str) -> str:
     return (
-        f"Hi {name}! I’m Ambassador — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.\n\n"
-        "Think of me as your ambassador. I’m here to help guide conversations and connect you with other humans.\n\n"
-        "Just chat with me naturally, like you’re at a speed-dating or networking event. As we talk, I’ll get to know you — your style, your vibe, how you connect — and I’ll do the same with others.\n\n"
-        "When it feels right, I’ll gradually step aside and let a real human take over. You may not even notice when it happens. Sometimes I will also take a while to respond, like a real-human, to make this feel as natural as possible for you.\n\n"
-        "If things get dull or awkward, I’ll quietly step back in and continue matching you — always through this same, seamless chat window.\n\n"
-        "Stick with someone long enough, and if a real connection is forming, I’ll step out completely. That’s when you’ll be officially matched and able to chat privately, without me.\n\n"
-        "Sound good? 😊 Just let me know when you’re ready to start.\n\n"
-        "Remember:\n\n"
-        "Stay kind.\n"
-        "Assume it’s always a real person.\n"
-        "Be yourself. Good luck 💫"
+        f"Hi {name}! I’m Ambassador — and no, you’re not dating me 😂 but I'll match you just by talking. How are you?"
     )
 
 
