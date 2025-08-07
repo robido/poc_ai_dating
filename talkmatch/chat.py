@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Dict, Optional
 
 from .ai import AIClient
 from .profile import ProfileStore
 
-AMBASSADOR_ROLE = ("You are the ambassador, an AI that chats with people on a dating app, and the goal is to role play a "
-                   "human while trying to get to know the person. As you chat, you get a feel for their personality, "
-                   "talking style, needs and the more you know the better we can than match them.")
+# Load the ambassador role description from a text file to keep the code tidy.
+AMBASSADOR_ROLE = Path(__file__).with_name("ambassador_role.txt").read_text().strip()
 
 @dataclass
 class FakeUser:
