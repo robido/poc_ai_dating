@@ -57,7 +57,7 @@ Quickly develop a locally running Python-based prototype to demo and validate th
 
 * Short intro message from AI ambassador:
 
-> **Hi Jane!**
+> **Hi Dominic!**
 > I’m an AI — and no, you’re not dating me 😂, but chat with me as if you were and the rest will flow naturally.
 >
 > Think of me as your ambassador. I’m here to help guide conversations and connect you with other humans.
