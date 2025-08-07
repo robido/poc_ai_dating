@@ -5,6 +5,7 @@ import random
 import threading
 import time
 import tkinter as tk
+from pathlib import Path
 from tkinter import scrolledtext
 
 from .chat import ChatSession, FakeUser
@@ -15,14 +16,12 @@ from .personas import PERSONAS, Persona
 USER_NAME = "Dominic"
 ROLE_COLORS = {USER_NAME: "blue", "Ambassador": "green", "Other": "purple"}
 
+# Load the greeting template from a text file and format it with the desired name.
+GREETING_TEMPLATE = Path(__file__).with_name("greeting_template.txt").read_text().strip()
+
 
 def make_greeting(name: str) -> str:
-    return (
-        f"Hi {name}! I’m Ambassador — and no, you’re not dating me 😂 but I'll match you just by talking. How are you?"
-    )
-
-
-GREETING_MESSAGE = make_greeting(USER_NAME)
+    return GREETING_TEMPLATE.format(name=name)
 
 
 class ChatWindow(tk.Toplevel):
@@ -51,8 +50,9 @@ class ChatWindow(tk.Toplevel):
 
         tk.Button(self, text="Show Profile", command=self.show_profile).pack(pady=(0, 5))
 
-        self.display_message("Ambassador", GREETING_MESSAGE)
-        self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
+        greeting = make_greeting(USER_NAME)
+        self.display_message("Ambassador", greeting)
+        self.session.messages.append({"role": "assistant", "content": greeting})
         self.protocol("WM_DELETE_WINDOW", self.close)
 
     def display_message(self, role: str, content: str) -> None:
@@ -189,8 +189,9 @@ class UserChatPane(ChatPane):
         tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
         self.add_profile_button()
 
-        self.display_message("Ambassador", GREETING_MESSAGE)
-        self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
+        greeting = make_greeting(USER_NAME)
+        self.display_message("Ambassador", greeting)
+        self.session.messages.append({"role": "assistant", "content": greeting})
 
     def send(self) -> None:
         text = self.entry.get().strip()
@@ -219,8 +220,9 @@ class PersonaChatPane(ChatPane):
         tk.Button(self, text="Next", command=self.next_message).pack(pady=(0, 5))
         self.add_profile_button()
 
-        self.display_message("Ambassador", GREETING_MESSAGE)
-        self.session.messages.append({"role": "assistant", "content": GREETING_MESSAGE})
+        greeting = make_greeting(persona.name)
+        self.display_message("Ambassador", greeting)
+        self.session.messages.append({"role": "assistant", "content": greeting})
 
     def next_message(self) -> None:
         def worker() -> None:
