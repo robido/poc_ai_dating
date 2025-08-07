@@ -43,7 +43,7 @@ class ChatSession:
         """Handle a message from any client (user or persona)."""
 
         self.messages.append({"role": "user", "content": text})
-        self.profile_store.append(name, text)
+        self.profile_store.update(self.ai_client, name, text)
         if self.fake_user:
             reply = self.fake_user.get_reply()
         else:
