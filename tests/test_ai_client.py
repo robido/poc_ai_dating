@@ -17,6 +17,8 @@ def test_ai_client_returns_text():
         instance = MockOpenAI.return_value
         instance.chat.completions.create.return_value = fake_completion
         client = AIClient(api_key="test-key")
+        # Default token limit should allow larger responses.
+        assert client.max_tokens == 500
         result = client.get_response([{ "role": "user", "content": "Hello" }])
 
     assert result == "Hi there"
