@@ -6,6 +6,7 @@ from typing import Dict
 
 from ..session_manager import SessionManager
 from .chat_box import ChatBox
+from ..ai import AIClient
 
 
 class ControlPanel(tk.Tk):
@@ -64,6 +65,8 @@ class ControlPanel(tk.Tk):
         self.after(0, lambda: [w.attributes("-topmost", False) for w in windows])
 
 
-def run_app() -> None:
-    manager = SessionManager()
+def run_app(openai_client=None) -> None:
+    """Launch the control panel with optional preconfigured OpenAI client."""
+    factory = (lambda: AIClient(openai_client=openai_client)) if openai_client else AIClient
+    manager = SessionManager(ai_client_factory=factory)
     ControlPanel(manager).mainloop()
