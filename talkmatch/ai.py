@@ -17,7 +17,8 @@ class AIClient:
     """Simple wrapper around the OpenAI chat completion API."""
 
     api_key: str | None = None
-    max_tokens: int = 150
+    # Allow larger responses so profiles are not truncated.
+    max_tokens: int = 500
 
     def __post_init__(self) -> None:
         key = self.api_key or os.getenv("OPENAI_API_KEY")

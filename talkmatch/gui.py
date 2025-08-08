@@ -6,7 +6,7 @@ import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import scrolledtext
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from .chat import ChatSession, FakeUser
 from .ai import AIClient
@@ -163,11 +163,18 @@ class ChatPane(tk.Frame):
     def add_match_area(self) -> None:
         self.match_area.pack(fill=tk.BOTH, expand=False, padx=5, pady=5)
 
-    def update_match_display(self, matches: List[Tuple[str, float]]) -> None:
+    def update_match_display(
+        self,
+        matches: List[Tuple[str, float]],
+        message_counts: Optional[Dict[str, int]] = None,
+    ) -> None:
         self.match_area.configure(state="normal")
         self.match_area.delete("1.0", tk.END)
         for name, score in matches:
-            self.match_area.insert(tk.END, f"{name}: {score:.2f}\n")
+            count = 0
+            if message_counts:
+                count = message_counts.get(name, 0)
+            self.match_area.insert(tk.END, f"{name}: {score:.2f} ({count} msgs)\n")
         self.match_area.configure(state="disabled")
 
     def show_profile(self) -> None:
@@ -274,8 +281,16 @@ def run_app() -> None:
 
     def calculate() -> None:
         matcher.calculate(AIClient())
+        top = matcher.top_matches(USER_NAME, 1)
+        if top and top[0][1] > 0:
+            user_pane.session.set_persona(top[0][0])
+        else:
+            user_pane.session.set_persona(None)
+        msg_counts = user_pane.session.persona_message_count
         for name, pane in panes.items():
-            pane.update_match_display(matcher.top_matches(name))
+            pane.update_match_display(
+                matcher.top_matches(name), message_counts=msg_counts
+            )
 
     tk.Button(root, text="Calculate matches", command=calculate).grid(
         row=1, column=0, columnspan=len(panes), pady=5
