@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import json
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Tuple
+import re
 
 from .ai import AIClient
-from .profile import ProfileStore
+from .storage import ProfileStore, MatchMatrixStore
 
 
 @dataclass
@@ -17,23 +16,14 @@ class Matcher:
     users: List[str]
     path: Path | None = None
     matrix: Dict[str, Dict[str, float]] = field(init=False)
+    store: MatchMatrixStore = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.path and self.path.exists():
-            self.matrix = json.loads(self.path.read_text(encoding="utf-8"))
-            # ensure all users exist in the matrix
-            for u in self.users:
-                self.matrix.setdefault(u, {})
-                for v in self.users:
-                    if u != v:
-                        self.matrix[u].setdefault(v, 0.0)
-        else:
-            self.matrix = {u: {v: 0.0 for v in self.users if v != u} for u in self.users}
+        self.store = MatchMatrixStore(self.path) if self.path else MatchMatrixStore()
+        self.matrix = self.store.load(self.users)
 
     def _save(self) -> None:
-        if self.path:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            self.path.write_text(json.dumps(self.matrix), encoding="utf-8")
+        self.store.save(self.matrix)
 
     def clear(self) -> None:
         """Reset all match scores to zero and persist the empty matrix."""
