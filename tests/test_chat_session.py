@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from talkmatch.chat import ChatSession
 from talkmatch.fake_user import FakeUser
 from talkmatch.profile import ProfileStore
-from talkmatch.storage import ChatStore, MessageCountStore
+from talkmatch.storage import ChatStore
 
 
 class DummyAI:
@@ -26,7 +26,6 @@ def test_chat_session_uses_ai(tmp_path):
         ai_client=DummyAI(["Stored profile", "AI reply"]),
         profile_store=store,
         chat_store=ChatStore(path=tmp_path / "history.json"),
-        message_counts=MessageCountStore(path=tmp_path / "counts.json"),
     )
     reply = session.send_client_message("Alice", "Hello")
     assert reply == "AI reply"
@@ -39,7 +38,6 @@ def test_chat_session_switch_to_fake_user(tmp_path):
         ai_client=DummyAI(["Stored profile"]),
         profile_store=store,
         chat_store=ChatStore(path=tmp_path / "history.json"),
-        message_counts=MessageCountStore(path=tmp_path / "counts.json"),
     )
     fake = FakeUser(["Hi I'm fake"])
     session.switch_to_fake_user(fake)
@@ -48,33 +46,13 @@ def test_chat_session_switch_to_fake_user(tmp_path):
     assert store.read("Bob") == "Stored profile"
 
 
-def test_chat_session_tracks_persona_messages(tmp_path):
-    store = ProfileStore(base_dir=tmp_path)
-    store.profiles["Alex"] = "Profile"
-    store.save(store.profiles)
-    msg_counts = MessageCountStore(path=tmp_path / "counts.json")
-    session = ChatSession(
-        ai_client=DummyAI(["Stored profile", "AI reply"]),
-        profile_store=store,
-        chat_store=ChatStore(path=tmp_path / "history.json"),
-        message_counts=msg_counts,
-    )
-    session.set_persona("Alex")
-    reply = session.send_client_message("Alice", "Hi")
-    assert reply == "AI reply"
-    pair = tuple(sorted(["Alice", "Alex"]))
-    assert msg_counts.counts[pair] == 1
-
-
 def test_chat_session_persists_history(tmp_path):
     store = ProfileStore(base_dir=tmp_path)
     history = tmp_path / "history.json"
-    counts = tmp_path / "counts.json"
     session1 = ChatSession(
         ai_client=DummyAI(["profile1", "reply1"]),
         profile_store=store,
         chat_store=ChatStore(path=history),
-        message_counts=MessageCountStore(path=counts),
     )
     session1.send_client_message("Alice", "Hello")
     assert history.exists()
@@ -83,6 +61,5 @@ def test_chat_session_persists_history(tmp_path):
         ai_client=DummyAI(["profile2", "reply2"]),
         profile_store=store,
         chat_store=ChatStore(path=history),
-        message_counts=MessageCountStore(path=counts),
     )
     assert session2.messages[1]["content"] == "Hello"
