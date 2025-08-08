@@ -178,14 +178,15 @@ class ChatPane(tk.Frame):
     def update_match_display(
         self,
         matches: List[Tuple[str, float]],
-        message_counts: Optional[Dict[str, int]] = None,
+        message_counts: Optional[Dict[Tuple[str, str], int]] = None,
     ) -> None:
         self.match_area.configure(state="normal")
         self.match_area.delete("1.0", tk.END)
         for name, score in matches:
             count = 0
             if message_counts:
-                count = message_counts.get(name, 0)
+                key = tuple(sorted([self.client_name, name]))
+                count = message_counts.get(key, 0)
             self.match_area.insert(tk.END, f"{name}: {score:.2f} ({count} msgs)\n")
         self.match_area.configure(state="disabled")
 
@@ -297,6 +298,19 @@ def run_app() -> None:
         pane.grid(row=0, column=idx, padx=5, pady=5)
         panes[persona.name] = pane
 
+    def refresh_matches() -> None:
+        def do_refresh() -> None:
+            msg_counts = ChatSession.message_counts
+            for name, pane in panes.items():
+                pane.update_match_display(
+                    matcher.top_matches(name), message_counts=msg_counts
+                )
+
+        root.after(0, do_refresh)
+
+    for pane in panes.values():
+        pane.session.update_callback = refresh_matches
+
     def calculate() -> None:
         matcher.calculate(AIClient())
         top = matcher.top_matches(USER_NAME, 1)
@@ -304,11 +318,7 @@ def run_app() -> None:
             user_pane.session.set_persona(top[0][0])
         else:
             user_pane.session.set_persona(None)
-        msg_counts = user_pane.session.persona_message_counts
-        for name, pane in panes.items():
-            pane.update_match_display(
-                matcher.top_matches(name), message_counts=msg_counts
-            )
+        refresh_matches()
 
     tk.Button(root, text="Calculate matches", command=calculate).grid(
         row=1, column=0, columnspan=len(panes), pady=5
