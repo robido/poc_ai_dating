@@ -1,0 +1,9 @@
+Evaluate how well the following dating profile text covers each objective listed.
+
+Objectives:
+{objectives}
+
+Profile:
+{profile}
+
+Return only an integer from 0 to 100 representing the percentage of objectives addressed.
