@@ -11,6 +11,8 @@ limited-context AI agents even as the code grows. Contributors should:
   regressions.
 - Prioritize simple, scalable architecture so modules remain easy to load within
   small context windows.
+- Update this AGENTS.md file whenever new modules, classes, or domain terms are
+  introduced so the vocabulary and repository overview stay current.
 
 These practices help maintain long-term quality and keep the codebase easy to
 navigate for both humans and AI.
@@ -34,6 +36,10 @@ and basic matchmaking to validate the concept and gather early feedback.
 - **Match score** – numeric compatibility between users, computed by the matcher and shown in each chat window.
 - **Match matrix** – persisted table of match scores between every pair of users.
 - **Fake user** – automated script that simulates human replies for demos and tests.
+- **Session manager** – backend component that coordinates persona chat sessions and matchmaking outside the GUI.
+- **Readiness evaluator** – AI tool that checks whether profiles cover required objectives before matching.
+- **Profile objectives** – key traits collected for each profile (age, values, languages, etc.).
+- **User filter** – pluggable filter that narrows the user list prior to matchmaking; e.g., the readiness filter.
 
 ## Repository Overview
 
@@ -47,12 +53,19 @@ and basic matchmaking to validate the concept and gather early feedback.
 - `talkmatch/ai.py` – OpenAI chat client wrapper.
 - `talkmatch/ambassador_role.txt` – system prompt for the ambassador persona.
 - `talkmatch/build_profile.txt` – prompt template for updating user profiles.
+- `talkmatch/collect_info_prompt.txt` – prompt template for gathering additional user details.
 - `talkmatch/chat.py` – conversation state management and message routing.
 - `talkmatch/fake_user.py` – scripted fake user replies.
 - `talkmatch/greeting_template.txt` – template used to greet personas.
 - `talkmatch/matcher.py` – compute and store compatibility scores.
+- `talkmatch/objectives.py` – key profile objectives for compatibility.
+- `talkmatch/prompts.py` – load static text prompts and persona descriptions.
+- `talkmatch/filters.py` – user list filters (e.g., readiness checking).
 - `talkmatch/personas.py` – load persona descriptions and generate system prompts.
 - `talkmatch/profile.py` – backward-compatible import exposing `ProfileStore`.
+- `talkmatch/readiness.py` – evaluate whether profiles meet objectives before matching.
+- `talkmatch/readiness_prompt.txt` – prompt used by the readiness evaluator.
+- `talkmatch/session_manager.py` – manage chat sessions and matchmaking independent of the GUI.
 
 #### GUI
 - `talkmatch/gui/__init__.py` – GUI package marker.
