@@ -10,7 +10,12 @@ from ..personas import Persona
 from ..prompts import GREETING_TEMPLATE
 from .persona_controller import PersonaChatController
 
-ROLE_COLORS = {"Ambassador": "green", "Other": "purple"}
+ROLE_COLORS = {
+    "Ambassador [trying": "orange",
+    "Ambassador [linked": "blue",
+    "Ambassador": "green",
+    "Other": "purple",
+}
 
 def make_greeting(name: str) -> str:
     return GREETING_TEMPLATE.format(name=name)
@@ -85,8 +90,11 @@ class ChatBox(tk.Toplevel):
         )
         name_tag = f"{tag_role}_name"
         if name_tag not in self.chat_area.tag_names():
-            base_role = role.split(" [", 1)[0]
-            color = ROLE_COLORS.get(base_role, "purple")
+            color = "purple"
+            for prefix, val in ROLE_COLORS.items():
+                if role.startswith(prefix):
+                    color = val
+                    break
             self.chat_area.tag_config(tag_role, foreground=color)
             self.chat_area.tag_config(
                 name_tag, foreground=color, font=("Helvetica", 10, "bold")

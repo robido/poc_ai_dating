@@ -46,6 +46,6 @@ def test_session_manager_respects_readiness_filter(
 
     manager.calculate()
 
-    assert manager.sessions["A"].matched_persona == "C"
-    assert manager.sessions["C"].matched_persona == "A"
-    assert manager.sessions["B"].matched_persona is None
+    assert manager.sessions["A"].ambassador.persona == "C"
+    assert manager.sessions["C"].ambassador.persona == "A"
+    assert manager.sessions["B"].ambassador.persona is None

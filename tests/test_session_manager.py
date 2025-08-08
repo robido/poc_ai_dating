@@ -31,14 +31,14 @@ def test_session_manager_handles_matches(tmp_path):
     manager.update_callback = lambda m: captured.update({"matches": m})
 
     manager.calculate()
-    assert manager.sessions["A"].matched_persona == "B"
-    assert manager.sessions["B"].matched_persona == "A"
+    assert manager.sessions["A"].ambassador.persona == "B"
+    assert manager.sessions["B"].ambassador.persona == "A"
     assert captured["matches"]["A"][0][0] == "B"
 
     manager.sessions["A"].send_client_message("A", "Hi")
 
     manager.clear()
-    assert manager.sessions["A"].matched_persona is None
+    assert manager.sessions["A"].ambassador.persona is None
 
 
 class ExcludeBFilter:
@@ -60,8 +60,8 @@ def test_session_manager_applies_filters(tmp_path):
         filters=[ExcludeBFilter()],
     )
     manager.calculate()
-    assert manager.sessions["A"].matched_persona is None
-    assert manager.sessions["B"].matched_persona is None
+    assert manager.sessions["A"].ambassador.persona is None
+    assert manager.sessions["B"].ambassador.persona is None
 
 
 def test_no_impersonation_on_low_match(tmp_path):
@@ -75,5 +75,5 @@ def test_no_impersonation_on_low_match(tmp_path):
         personas=personas, base_dir=tmp_path, ai_client_factory=factory, filters=[]
     )
     manager.calculate()
-    assert manager.sessions["A"].matched_persona is None
-    assert manager.sessions["B"].matched_persona is None
+    assert manager.sessions["A"].ambassador.persona is None
+    assert manager.sessions["B"].ambassador.persona is None
