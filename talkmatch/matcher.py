@@ -50,19 +50,26 @@ class Matcher:
         self.matrix = {u: {v: 0.0 for v in self.users if v != u} for u in self.users}
         self._save()
 
-    def calculate(self, ai_client: AIClient, profile_store: ProfileStore | None = None) -> None:
+    def calculate(
+        self,
+        ai_client: AIClient,
+        profile_store: ProfileStore | None = None,
+        users: List[str] | None = None,
+    ) -> None:
         """Ask the AI to rate compatibility for each user pair.
 
+        ``users`` may restrict the calculation to a subset of ``self.users``.
         The AI is prompted with the stored profiles of each pair of users and
         expected to return a floating point number between 0 and 1.  The score
         is stored symmetrically in the matrix.  Because our demo only has a
         handful of users we simply perform one request per pair.
         """
 
+        target_users = users or self.users
         store = profile_store or ProfileStore()
-        profiles = {user: store.read(user) for user in self.users}
-        for i, u in enumerate(self.users):
-            for v in self.users[i + 1:]:
+        profiles = {user: store.read(user) for user in target_users}
+        for i, u in enumerate(target_users):
+            for v in target_users[i + 1 :]:
                 prompt = build_prompt(u, v, profiles)
                 reply = ai_client.get_response([{"role": "user", "content": prompt}])
                 score = _parse_score(reply)

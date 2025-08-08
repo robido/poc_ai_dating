@@ -38,6 +38,16 @@ def test_top_matches_use_ai_scores():
     assert matcher.top_matches("B", top_n=2) == [("A", 0.9), ("C", 0.3)]
 
 
+def test_calculate_subset_of_users(tmp_path):
+    users = ["A", "B", "C"]
+    matcher = Matcher(users, path=tmp_path / "matrix.json")
+    ai = DummyAI(["0.7"])
+    store = DummyStore({"A": "a", "B": "b", "C": "c"})
+    matcher.calculate(ai, profile_store=store, users=["A", "B"])
+    assert matcher.top_matches("A", top_n=2)[0] == ("B", 0.7)
+    assert matcher.matrix["A"]["C"] == 0.0
+
+
 def test_match_matrix_persistence(tmp_path):
     path = tmp_path / "matrix.json"
     users = ["A", "B"]
