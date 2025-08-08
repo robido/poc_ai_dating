@@ -10,6 +10,7 @@ from .chat import ChatSession
 from .matcher import Matcher
 from .personas import PERSONAS, Persona
 from .storage import ChatStore, ProfileStore, BASE_DIR
+from .filters import UserFilter
 
 
 class SessionManager:
@@ -20,11 +21,13 @@ class SessionManager:
         personas: List[Persona] = PERSONAS,
         base_dir: Path = BASE_DIR,
         ai_client_factory: Callable[[], AIClient] = AIClient,
+        filters: Optional[List[UserFilter]] = None,
     ) -> None:
         self.personas = personas
         self.base_dir = base_dir
         self.ai_client_factory = ai_client_factory
         self.profile_store = ProfileStore(base_dir=base_dir / "profiles")
+        self.filters = filters or []
         self.sessions: Dict[str, ChatSession] = {}
         self.matcher = Matcher(
             [p.name for p in personas], path=base_dir / "match_matrix.json"
@@ -45,11 +48,17 @@ class SessionManager:
     # Public API ---------------------------------------------------------
     def calculate(self) -> None:
         """Compute matches and assign personas to sessions."""
+        users = [p.name for p in self.personas]
+        for user_filter in self.filters:
+            users = user_filter.filter(users)
         ai = self.ai_client_factory()
-        self.matcher.calculate(ai, profile_store=self.profile_store)
+        self.matcher.calculate(ai, profile_store=self.profile_store, users=users)
         for persona in self.personas:
-            top = self.matcher.top_matches(persona.name, 1)
             session = self.sessions[persona.name]
+            if persona.name not in users:
+                session.set_persona(None)
+                continue
+            top = [m for m in self.matcher.top_matches(persona.name, 1) if m[0] in users]
             if top and top[0][1] > 0:
                 session.set_persona(top[0][0])
             else:

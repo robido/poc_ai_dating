@@ -39,3 +39,23 @@ def test_session_manager_handles_matches(tmp_path):
 
     manager.clear()
     assert manager.sessions["A"].matched_persona is None
+
+
+class ExcludeBFilter:
+    def filter(self, users):
+        return [u for u in users if u != "B"]
+
+
+def test_session_manager_applies_filters(tmp_path):
+    personas = [Persona("A", "a"), Persona("B", "b")]
+    factory = DummyFactory([
+        [],  # AI for session A
+        [],  # AI for session B
+        [],  # AI for matcher
+    ])
+    manager = SessionManager(
+        personas=personas, base_dir=tmp_path, ai_client_factory=factory, filters=[ExcludeBFilter()]
+    )
+    manager.calculate()
+    assert manager.sessions["A"].matched_persona is None
+    assert manager.sessions["B"].matched_persona is None
