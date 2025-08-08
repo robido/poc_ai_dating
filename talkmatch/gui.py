@@ -273,7 +273,7 @@ def run_app() -> None:
         panes[persona.name] = pane
 
     def calculate() -> None:
-        matcher.calculate()
+        matcher.calculate(AIClient())
         for name, pane in panes.items():
             pane.update_match_display(matcher.top_matches(name))
 
