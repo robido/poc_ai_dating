@@ -34,16 +34,18 @@ class ChatWindow(tk.Toplevel):
         self.session = session
         self._on_close = on_close
         self.title("TalkMatch Chat")
-        self.geometry("300x500")
+        self.geometry("250x500")
 
-        tk.Label(self, text=USER_NAME, font=("Helvetica", 12, "bold")).pack()
-        self.chat_area = scrolledtext.ScrolledText(self, state="disabled", font=("Helvetica", 12))
+        tk.Label(self, text=USER_NAME, font=("Helvetica", 10, "bold")).pack()
+        self.chat_area = scrolledtext.ScrolledText(
+            self, state="disabled", width=40, font=("Helvetica", 10), wrap=tk.WORD
+        )
         self.chat_area.tag_config(USER_NAME, foreground=ROLE_COLORS[USER_NAME])
         self.chat_area.tag_config("Ambassador", foreground=ROLE_COLORS["Ambassador"])
         self.chat_area.tag_config("Other", foreground=ROLE_COLORS["Other"])
         self.chat_area.pack(fill=tk.BOTH, expand=True)
 
-        self.entry = tk.Entry(self, font=("Helvetica", 12))
+        self.entry = tk.Entry(self, font=("Helvetica", 10))
         self.entry.pack(fill=tk.X, padx=5, pady=5)
         self.entry.bind("<Return>", lambda event: self.send_message())
 
@@ -63,7 +65,7 @@ class ChatWindow(tk.Toplevel):
         if name_tag not in self.chat_area.tag_names():
             color = ROLE_COLORS.get(role, "purple")
             self.chat_area.tag_config(role, foreground=color)
-            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 12, "bold"))
+            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 10, "bold"))
         self.chat_area.insert(tk.END, f"{role}: ", name_tag)
         self.chat_area.insert(tk.END, f"{content}\n\n", role)
         self.chat_area.configure(state="disabled")
@@ -152,10 +154,14 @@ class ChatPane(tk.Frame):
         super().__init__(master)
         self.session = session
         self.client_name = title
-        tk.Label(self, text=title, font=("Helvetica", 12, "bold")).pack()
-        self.chat_area = scrolledtext.ScrolledText(self, state="disabled", width=50, height=20, font=("Helvetica", 12))
+        tk.Label(self, text=title, font=("Helvetica", 10, "bold")).pack()
+        self.chat_area = scrolledtext.ScrolledText(
+            self, state="disabled", width=40, height=20, font=("Helvetica", 10), wrap=tk.WORD
+        )
         self.chat_area.pack(fill=tk.BOTH, expand=True)
-        self.match_area = tk.Text(self, state="disabled", height=5, font=("Helvetica", 10))
+        self.match_area = tk.Text(
+            self, state="disabled", height=5, font=("Helvetica", 9), wrap=tk.WORD
+        )
 
     def add_profile_button(self) -> None:
         tk.Button(self, text="Show Profile", command=self.show_profile).pack(pady=(0, 5))
@@ -189,7 +195,7 @@ class ChatPane(tk.Frame):
         if name_tag not in self.chat_area.tag_names():
             color = ROLE_COLORS.get(role, "purple")
             self.chat_area.tag_config(role, foreground=color)
-            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 12, "bold"))
+            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 10, "bold"))
         self.chat_area.insert(tk.END, f"{role}: ", name_tag)
         self.chat_area.insert(tk.END, f"{content}\n\n", role)
         self.chat_area.configure(state="disabled")
@@ -202,7 +208,7 @@ class UserChatPane(ChatPane):
     def __init__(self, master: tk.Misc):
         session = ChatSession(AIClient())
         super().__init__(master, session, USER_NAME)
-        self.entry = tk.Entry(self, font=("Helvetica", 12))
+        self.entry = tk.Entry(self, font=("Helvetica", 10))
         self.entry.pack(fill=tk.X, padx=5, pady=5)
         self.entry.bind("<Return>", lambda event: self.send())
         tk.Button(self, text="Send", command=self.send).pack(pady=(0, 5))
