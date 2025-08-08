@@ -67,13 +67,17 @@ class ChatWindow(tk.Toplevel):
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        name_tag = f"{role}_name"
+        # Tk tag names cannot contain spaces, so sanitize the role name for tagging
+        tag_role = role.replace(" ", "_")
+        name_tag = f"{tag_role}_name"
         if name_tag not in self.chat_area.tag_names():
             color = ROLE_COLORS.get(role, "purple")
-            self.chat_area.tag_config(role, foreground=color)
-            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 10, "bold"))
+            self.chat_area.tag_config(tag_role, foreground=color)
+            self.chat_area.tag_config(
+                name_tag, foreground=color, font=("Helvetica", 10, "bold")
+            )
         self.chat_area.insert(tk.END, f"{role}: ", name_tag)
-        self.chat_area.insert(tk.END, f"{content}\n\n", role)
+        self.chat_area.insert(tk.END, f"{content}\n\n", tag_role)
         self.chat_area.configure(state="disabled")
         self.chat_area.yview(tk.END)
 
@@ -87,7 +91,8 @@ class ChatWindow(tk.Toplevel):
         def run() -> None:
             time.sleep(REPLY_DELAY)
             reply = self.session.send_client_message(USER_NAME, text)
-            self.after(0, lambda: self.display_message("Other", reply))
+            role = self.session.matched_persona or "Other"
+            self.after(0, lambda: self.display_message(role, reply))
 
         threading.Thread(target=run, daemon=True).start()
 
@@ -197,13 +202,17 @@ class ChatPane(tk.Frame):
 
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        name_tag = f"{role}_name"
+        # Ensure tag names are valid by removing spaces
+        tag_role = role.replace(" ", "_")
+        name_tag = f"{tag_role}_name"
         if name_tag not in self.chat_area.tag_names():
             color = ROLE_COLORS.get(role, "purple")
-            self.chat_area.tag_config(role, foreground=color)
-            self.chat_area.tag_config(name_tag, foreground=color, font=("Helvetica", 10, "bold"))
+            self.chat_area.tag_config(tag_role, foreground=color)
+            self.chat_area.tag_config(
+                name_tag, foreground=color, font=("Helvetica", 10, "bold")
+            )
         self.chat_area.insert(tk.END, f"{role}: ", name_tag)
-        self.chat_area.insert(tk.END, f"{content}\n\n", role)
+        self.chat_area.insert(tk.END, f"{content}\n\n", tag_role)
         self.chat_area.configure(state="disabled")
         self.chat_area.yview(tk.END)
 
@@ -241,7 +250,8 @@ class UserChatPane(ChatPane):
         def run() -> None:
             time.sleep(REPLY_DELAY)
             reply = self.session.send_client_message(USER_NAME, text)
-            self.after(0, lambda: self.display_message("Ambassador", reply))
+            role = self.session.matched_persona or "Ambassador"
+            self.after(0, lambda: self.display_message(role, reply))
 
         threading.Thread(target=run, daemon=True).start()
 
