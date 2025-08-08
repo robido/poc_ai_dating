@@ -1,4 +1,4 @@
-from talkmatch.gui import run_app
+from talkmatch.gui.control_panel import run_app
 
 
 if __name__ == "__main__":
