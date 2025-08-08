@@ -35,7 +35,8 @@ class ChatBox(tk.Toplevel):
         self.client_name = persona.name
 
         self.title(persona.name)
-        self.geometry("300x500")
+        # Increase the window height to give the matches list more space.
+        self.geometry("300x600")
 
         tk.Label(self, text=persona.name, font=("Helvetica", 10, "bold")).pack()
         self.chat_area = scrolledtext.ScrolledText(
@@ -55,12 +56,11 @@ class ChatBox(tk.Toplevel):
             side=tk.LEFT, padx=5
         )
 
+        # Provide a bit more room for the matches list.
         self.match_area = tk.Text(
-            self, state="disabled", height=5, font=("Helvetica", 9), wrap=tk.WORD
+            self, state="disabled", height=8, font=("Helvetica", 9), wrap=tk.WORD
         )
         self.match_area.pack(fill=tk.BOTH, expand=False, padx=5, pady=5)
-
-        ROLE_COLORS[persona.name] = "blue" if persona.name == "Dominic" else "purple"
 
         if len(self.session.messages) > 1:
             for msg in self.session.messages[1:]:
@@ -146,6 +146,8 @@ class ControlPanel(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("TalkMatch Control Panel")
+        # Position the control panel and chat windows so they do not overlap.
+        self.geometry("300x200+50+50")
         self.persistent = Persistent()
         self.profile_store = self.persistent.profile_store()
         ChatSession.message_counts = self.persistent.load_message_counts()
@@ -154,7 +156,7 @@ class ControlPanel(tk.Tk):
         self.sessions: Dict[str, ChatSession] = {}
         self.windows: Dict[str, ChatBox] = {}
 
-        for persona in self.personas:
+        for idx, persona in enumerate(self.personas):
             session = ChatSession(
                 AIClient(),
                 profile_store=self.profile_store,
@@ -163,6 +165,8 @@ class ControlPanel(tk.Tk):
             )
             self.sessions[persona.name] = session
             win = ChatBox(self, persona, session)
+            # Arrange chat windows horizontally with a small gap.
+            win.geometry(f"+{350 + idx * 320}+50")
             self.windows[persona.name] = win
 
         self.matcher = Matcher(
@@ -181,16 +185,18 @@ class ControlPanel(tk.Tk):
 
     def calculate(self) -> None:
         self.matcher.calculate(AIClient(), profile_store=self.profile_store)
-        top = self.matcher.top_matches("Dominic", 1)
-        if top and top[0][1] > 0:
-            self.sessions["Dominic"].set_persona(top[0][0])
-        else:
-            self.sessions["Dominic"].set_persona(None)
+        for persona in self.personas:
+            top = self.matcher.top_matches(persona.name, 1)
+            if top and top[0][1] > 0:
+                self.sessions[persona.name].set_persona(top[0][0])
+            else:
+                self.sessions[persona.name].set_persona(None)
         self.refresh_matches()
 
     def clear(self) -> None:
         self.matcher.clear()
-        self.sessions["Dominic"].set_persona(None)
+        for session in self.sessions.values():
+            session.set_persona(None)
         ChatSession.message_counts.clear()
         self.persistent.save_message_counts({})
         self.refresh_matches()
