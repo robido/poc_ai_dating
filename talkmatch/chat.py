@@ -8,6 +8,7 @@ import json
 
 from .ai import AIClient
 from .profile import ProfileStore
+from .persistent import Persistent
 
 # Load the ambassador role description from a text file to keep the code tidy.
 AMBASSADOR_ROLE = Path(__file__).with_name("ambassador_role.txt").read_text().strip()
@@ -33,6 +34,7 @@ class ChatSession:
 
     ai_client: AIClient
     profile_store: ProfileStore = field(default_factory=ProfileStore)
+    persistent: Optional[Persistent] = None
     messages: List[Dict[str, str]] = field(
         default_factory=lambda: [{"role": "system", "content": AMBASSADOR_ROLE}]
     )
@@ -44,6 +46,8 @@ class ChatSession:
     message_counts: ClassVar[Dict[Tuple[str, str], int]] = {}
 
     def __post_init__(self) -> None:
+        if self.persistent and not ChatSession.message_counts:
+            ChatSession.message_counts = self.persistent.load_message_counts()
         if self.history_path and self.history_path.exists():
             try:
                 self.messages = json.loads(self.history_path.read_text())
@@ -75,6 +79,8 @@ class ChatSession:
                 ChatSession.message_counts.get(pair, 0) + 1
             )
         self.save_history()
+        if self.persistent:
+            self.persistent.save_message_counts(ChatSession.message_counts)
         if self.update_callback:
             self.update_callback()
         return reply
