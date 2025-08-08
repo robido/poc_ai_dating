@@ -35,6 +35,11 @@ class Matcher:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             self.path.write_text(json.dumps(self.matrix), encoding="utf-8")
 
+    def clear(self) -> None:
+        """Reset all match scores to zero and persist the empty matrix."""
+        self.matrix = {u: {v: 0.0 for v in self.users if v != u} for u in self.users}
+        self._save()
+
     def calculate(self, ai_client: AIClient, profile_store: ProfileStore | None = None) -> None:
         """Ask the AI to rate compatibility for each user pair.
 

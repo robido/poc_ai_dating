@@ -49,3 +49,13 @@ def test_match_matrix_persistence(tmp_path):
     # Instantiate a new matcher using the persisted data
     matcher_loaded = Matcher(users, path=path)
     assert matcher_loaded.top_matches("A") == [("B", 0.5)]
+
+
+def test_clear_resets_scores():
+    users = ["A", "B"]
+    matcher = Matcher(users)
+    matcher.matrix["A"]["B"] = 0.8
+    matcher.matrix["B"]["A"] = 0.8
+    matcher.clear()
+    assert matcher.matrix["A"]["B"] == 0.0
+    assert matcher.matrix["B"]["A"] == 0.0
