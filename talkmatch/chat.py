@@ -9,6 +9,7 @@ from .storage import ProfileStore, ChatStore
 from .fake_user import FakeUser
 from .prompts import AMBASSADOR_ROLE, COLLECT_INFO_PROMPT
 from .objectives import PROFILE_OBJECTIVES
+from .ambassador import Ambassador
 
 
 AMBASSADOR_SYSTEM_PROMPT = (
@@ -32,8 +33,7 @@ class ChatSession:
         ]
     )
     fake_user: Optional[FakeUser] = None
-    matched_persona: Optional[str] = None
-    ambassador_status: str = field(init=False, default="")
+    ambassador: Ambassador = field(default_factory=Ambassador)
     update_callback: Optional[Callable[[], None]] = None
 
     def __post_init__(self) -> None:
@@ -50,16 +50,23 @@ class ChatSession:
         self.profile_store.update(self.ai_client, name, text)
         if self.fake_user:
             reply = self.fake_user.get_reply()
+        elif self.ambassador.state == "linked":
+            reply = text
         else:
             messages = self.messages
-            if self.matched_persona:
-                profile = self.profile_store.read(self.matched_persona)
+            if self.ambassador.state == "acting" and self.ambassador.persona:
+                profile = self.profile_store.read(self.ambassador.persona)
                 persona_prompt = (
-                    f"Act as {self.matched_persona} using this profile: {profile}. "
+                    f"Act as {self.ambassador.persona} using this profile: {profile}. "
                     "Maintain the current topic and shift gradually from the ambassador's tone to "
-                    f"{self.matched_persona}'s style."
+                    f"{self.ambassador.persona}'s style."
                 )
                 messages = messages + [{"role": "system", "content": persona_prompt}]
+            elif self.ambassador.state == "linking" and self.ambassador.link_context:
+                link_prompt = (
+                    f"Other user recently said: {self.ambassador.link_context}"
+                )
+                messages = messages + [{"role": "system", "content": link_prompt}]
             else:
                 profile = self.profile_store.read(name).lower()
                 outstanding = [
@@ -86,17 +93,9 @@ class ChatSession:
     def switch_to_fake_user(self, fake_user: FakeUser) -> None:
         self.fake_user = fake_user
 
-    def set_status(self, status: str) -> None:
-        """Update the ambassador's activity label."""
-        self.ambassador_status = status
-
     def ambassador_label(self) -> str:
-        return f"Ambassador [{self.ambassador_status}]"
+        return f"Ambassador [{self.ambassador.status()}]"
 
     def set_persona(self, persona: Optional[str]) -> None:
         """Switch the ambassador to act as a given persona."""
-        self.matched_persona = persona
-        if persona:
-            self.set_status(f"acting as {persona}")
-        else:
-            self.set_status("collecting info")
+        self.ambassador.set_persona(persona)

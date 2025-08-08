@@ -70,6 +70,8 @@ class Matcher:
         profiles = {user: store.read(user) for user in target_users}
         for i, u in enumerate(target_users):
             for v in target_users[i + 1 :]:
+                if self.matrix.get(u, {}).get(v, 0.0) >= 1.0:
+                    continue
                 prompt = build_prompt(u, v, profiles)
                 reply = ai_client.get_response([{"role": "user", "content": prompt}])
                 score = _parse_score(reply)
@@ -81,3 +83,8 @@ class Matcher:
         """Return the top ``top_n`` matches for ``user``."""
         scores = self.matrix.get(user, {})
         return sorted(scores.items(), key=lambda item: item[1], reverse=True)[:top_n]
+
+    def declare_official_match(self, a: str, b: str) -> None:
+        self.matrix.setdefault(a, {})[b] = 1.0
+        self.matrix.setdefault(b, {})[a] = 1.0
+        self._save()
