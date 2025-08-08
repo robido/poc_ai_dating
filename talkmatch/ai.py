@@ -17,6 +17,7 @@ class AIClient:
     """Simple wrapper around the OpenAI chat completion API."""
 
     api_key: str | None = None
+    max_tokens: int = 150
 
     def __post_init__(self) -> None:
         key = self.api_key or os.getenv("OPENAI_API_KEY")
@@ -29,5 +30,6 @@ class AIClient:
         completion = self.client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
+            max_tokens=self.max_tokens,
         )
         return completion.choices[0].message.content
