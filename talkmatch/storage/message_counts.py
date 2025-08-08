@@ -5,33 +5,36 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Tuple
-import json
 
 from . import BASE_DIR
+from .json_store import JsonStore
 
 
 @dataclass
-class MessageCountStore:
-    path: Path = BASE_DIR / "message_counts.json"
+class MessageCountStore(JsonStore[Dict[Tuple[str, str], int]]):
     counts: Dict[Tuple[str, str], int] = field(init=False)
 
+    def default_path(self) -> Path:
+        return BASE_DIR / "message_counts.json"
+
+    def default(self) -> Dict[Tuple[str, str], int]:
+        return {}
+
+    def serialize(self, data: Dict[Tuple[str, str], int]) -> Dict[str, int]:
+        return {"|".join(k): v for k, v in data.items()}
+
+    def deserialize(self, raw: Dict[str, int]) -> Dict[Tuple[str, str], int]:
+        return {tuple(k.split("|")): v for k, v in raw.items()}
+
     def __post_init__(self) -> None:
-        if self.path.exists():
-            raw = json.loads(self.path.read_text(encoding="utf-8"))
-            self.counts = {tuple(k.split("|")): v for k, v in raw.items()}
-        else:
-            self.counts = {}
+        super().__post_init__()
+        self.counts = self.load()
 
     def increment(self, name1: str, name2: str) -> None:
         pair = tuple(sorted([name1, name2]))
         self.counts[pair] = self.counts.get(pair, 0) + 1
-        self.save()
-
-    def save(self) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        raw = {"|".join(k): v for k, v in self.counts.items()}
-        self.path.write_text(json.dumps(raw), encoding="utf-8")
+        self.save(self.counts)
 
     def clear(self) -> None:
         self.counts.clear()
-        self.save()
+        self.save(self.counts)
