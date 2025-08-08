@@ -63,3 +63,28 @@ def test_chat_session_persists_history(tmp_path):
         chat_store=ChatStore(path=history),
     )
     assert session2.messages[1]["content"] == "Hello"
+
+
+def test_collect_info_prompt_added(tmp_path):
+    store = ProfileStore(base_dir=tmp_path)
+
+    class CaptureAI:
+        def __init__(self):
+            self.responses = ["profile", "reply"]
+            self.index = 0
+            self.last_messages = None
+
+        def get_response(self, messages):
+            self.last_messages = messages
+            resp = self.responses[self.index]
+            self.index += 1
+            return resp
+
+    ai = CaptureAI()
+    session = ChatSession(ai_client=ai, profile_store=store)
+    session.send_client_message("Alice", "Hi")
+    system_contents = [
+        m["content"] for m in ai.last_messages if m["role"] == "system"
+    ]
+    assert len(system_contents) >= 2
+    assert "kids" in system_contents[-1]
