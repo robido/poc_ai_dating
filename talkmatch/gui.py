@@ -9,6 +9,7 @@ from tkinter import scrolledtext
 from typing import Dict, List, Tuple, Optional
 
 from .chat import ChatSession, FakeUser
+from .profile import ProfileStore
 from .ai import AIClient
 from .matcher import Matcher
 from .personas import PERSONAS, Persona
@@ -263,6 +264,9 @@ class PersonaChatPane(ChatPane):
 
 def run_app() -> None:
     """Display the user and persona chats side-by-side."""
+    # Start with a clean set of user profiles for quick iteration.
+    ProfileStore().clear()
+
     root = tk.Tk()
     root.title("TalkMatch")
 

@@ -36,3 +36,8 @@ class ProfileStore:
         if not path.exists():
             return ""
         return path.read_text(encoding="utf-8")
+
+    def clear(self) -> None:
+        """Remove all stored profile files."""
+        for file in self.base_dir.glob("*.txt"):
+            file.unlink()

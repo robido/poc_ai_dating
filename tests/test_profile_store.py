@@ -27,3 +27,11 @@ def test_profile_store_uses_message_placeholder(tmp_path):
     prompt = ai.last_messages[0]["content"]
     assert "<USER INFO:existing profile>" in prompt
     assert "<CHAT MESSAGES:second message>" in prompt
+
+
+def test_clear_removes_profiles(tmp_path):
+    store = ProfileStore(base_dir=tmp_path)
+    path = tmp_path / "user.txt"
+    path.write_text("data", encoding="utf-8")
+    store.clear()
+    assert not any(tmp_path.glob("*.txt"))
