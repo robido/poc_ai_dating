@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..ai import AIClient
+from ..prompts import BUILD_PROFILE_PROMPT
 from . import BASE_DIR
 
 
@@ -14,9 +15,7 @@ class ProfileStore:
     """Persist conversation summaries per user."""
 
     base_dir: Path = BASE_DIR / "profiles"
-    prompt_template: str = (
-        (Path(__file__).resolve().parents[1] / "build_profile.txt").read_text(encoding="utf-8")
-    )
+    prompt_template: str = BUILD_PROFILE_PROMPT
 
     def __post_init__(self) -> None:
         self.base_dir.mkdir(exist_ok=True)

@@ -5,22 +5,17 @@ from __future__ import annotations
 import threading
 import time
 import tkinter as tk
-from pathlib import Path
 from tkinter import scrolledtext
 from typing import Dict, List, Tuple
 
 from ..ai import AIClient
 from ..chat import ChatSession
 from ..personas import Persona
+from ..prompts import GREETING_TEMPLATE
 
 ROLE_COLORS = {"Ambassador": "green", "Other": "purple"}
 # Shorten the pause before the AI responds so conversations feel snappier.
 REPLY_DELAY = 1
-
-GREETING_TEMPLATE = (
-    Path(__file__).resolve().parent.parent.joinpath("greeting_template.txt").read_text().strip()
-)
-
 
 def make_greeting(name: str) -> str:
     return GREETING_TEMPLATE.format(name=name)
