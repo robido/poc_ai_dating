@@ -54,9 +54,15 @@ class ChatWindow(tk.Toplevel):
 
         tk.Button(self, text="Show Profile", command=self.show_profile).pack(pady=(0, 5))
 
-        greeting = make_greeting(USER_NAME)
-        self.display_message("Ambassador", greeting)
-        self.session.messages.append({"role": "assistant", "content": greeting})
+        if len(self.session.messages) > 1:
+            for msg in self.session.messages[1:]:
+                role = USER_NAME if msg["role"] == "user" else "Other"
+                self.display_message(role, msg["content"])
+        else:
+            greeting = make_greeting(USER_NAME)
+            self.display_message("Ambassador", greeting)
+            self.session.messages.append({"role": "assistant", "content": greeting})
+            self.session.save_history()
         self.protocol("WM_DELETE_WINDOW", self.close)
 
     def display_message(self, role: str, content: str) -> None:
@@ -206,7 +212,7 @@ class UserChatPane(ChatPane):
     """Chat pane for the real user with text input."""
 
     def __init__(self, master: tk.Misc):
-        session = ChatSession(AIClient())
+        session = ChatSession(AIClient(), history_path=Path("chat_history.json"))
         super().__init__(master, session, USER_NAME)
         self.entry = tk.Entry(self, font=("Helvetica", 10))
         self.entry.pack(fill=tk.X, padx=5, pady=5)
@@ -215,9 +221,15 @@ class UserChatPane(ChatPane):
         self.add_profile_button()
         self.add_match_area()
 
-        greeting = make_greeting(USER_NAME)
-        self.display_message("Ambassador", greeting)
-        self.session.messages.append({"role": "assistant", "content": greeting})
+        if len(self.session.messages) > 1:
+            for msg in self.session.messages[1:]:
+                role = USER_NAME if msg["role"] == "user" else "Ambassador"
+                self.display_message(role, msg["content"])
+        else:
+            greeting = make_greeting(USER_NAME)
+            self.display_message("Ambassador", greeting)
+            self.session.messages.append({"role": "assistant", "content": greeting})
+            self.session.save_history()
 
     def send(self) -> None:
         text = self.entry.get().strip()

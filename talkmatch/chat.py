@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Dict, Optional
+import json
 
 from .ai import AIClient
 from .profile import ProfileStore
@@ -38,6 +39,14 @@ class ChatSession:
     fake_user: Optional[FakeUser] = None
     matched_persona: Optional[str] = None
     persona_message_counts: Dict[str, int] = field(default_factory=dict)
+    history_path: Optional[Path] = None
+
+    def __post_init__(self) -> None:
+        if self.history_path and self.history_path.exists():
+            try:
+                self.messages = json.loads(self.history_path.read_text())
+            except Exception:
+                pass
 
     def send_client_message(self, name: str, text: str) -> str:
         """Handle a message from any client (user or persona)."""
@@ -62,7 +71,14 @@ class ChatSession:
             self.persona_message_counts[self.matched_persona] = (
                 self.persona_message_counts.get(self.matched_persona, 0) + 1
             )
+        self.save_history()
         return reply
+
+    def save_history(self) -> None:
+        if not self.history_path:
+            return
+        self.history_path.parent.mkdir(parents=True, exist_ok=True)
+        self.history_path.write_text(json.dumps(self.messages), encoding="utf-8")
 
     def switch_to_fake_user(self, fake_user: FakeUser) -> None:
         self.fake_user = fake_user
