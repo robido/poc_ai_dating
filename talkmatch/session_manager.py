@@ -5,12 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
 
+import logging
+
 from .ai import AIClient
 from .chat import ChatSession
 from .matcher import Matcher
 from .personas import PERSONAS, Persona
 from .storage import ChatStore, ProfileStore, BASE_DIR
 from .filters import UserFilter, ReadinessFilter
+
+logger = logging.getLogger(__name__)
 
 
 class SessionManager:
@@ -105,16 +109,36 @@ class SessionManager:
         session = self.sessions[name]
         persona = session.ambassador.persona
         if not persona:
+            logger.debug(
+                "_maybe_link: %s state=%s no persona", name, session.ambassador.state
+            )
             return
         other = self.sessions.get(persona)
         if not other or other.ambassador.persona != name:
+            logger.debug(
+                "_maybe_link: %s persona=%s not reciprocated", name, persona
+            )
             return
-        if (
-            len(self._user_messages(session)) >= self.link_threshold
-            and len(self._user_messages(other)) >= self.link_threshold
-        ):
+        msgs = len(self._user_messages(session))
+        other_msgs = len(self._user_messages(other))
+        logger.debug(
+            "_maybe_link: %s<->%s msgs=%d other_msgs=%d threshold=%d",
+            name,
+            persona,
+            msgs,
+            other_msgs,
+            self.link_threshold,
+        )
+        if msgs >= self.link_threshold and other_msgs >= self.link_threshold:
             context_a = self._last_user_message(other)
             context_b = self._last_user_message(session)
+            logger.debug(
+                "_maybe_link: linking %s<->%s with contexts %r | %r",
+                name,
+                persona,
+                context_b,
+                context_a,
+            )
             session.ambassador.begin_link(persona, context_a)
             other.ambassador.begin_link(name, context_b)
             self._maybe_finalize_link(name)
@@ -122,14 +146,31 @@ class SessionManager:
     def _maybe_finalize_link(self, name: str) -> None:
         session = self.sessions[name]
         if session.ambassador.state != "linking":
+            logger.debug(
+                "_maybe_finalize_link: %s state=%s not linking",
+                name,
+                session.ambassador.state,
+            )
             return
         other_name = session.ambassador.link_target
         if not other_name:
+            logger.debug("_maybe_finalize_link: %s has no link_target", name)
             return
         other = self.sessions[other_name]
         if other.ambassador.state != "linking" or other.ambassador.link_target != name:
+            logger.debug(
+                "_maybe_finalize_link: %s and %s not mutually linking",
+                name,
+                other_name,
+            )
             return
-        if self._last_user_message(session).lower() == self._last_user_message(other).lower():
+        last_a = self._last_user_message(session)
+        last_b = self._last_user_message(other)
+        logger.debug(
+            "_maybe_finalize_link: last messages %r | %r", last_a, last_b
+        )
+        if last_a.lower() == last_b.lower():
+            logger.debug("finalizing link %s<->%s", name, other_name)
             session.ambassador.finalize_link()
             other.ambassador.finalize_link()
 
