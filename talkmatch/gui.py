@@ -286,7 +286,7 @@ def run_app() -> None:
             user_pane.session.set_persona(top[0][0])
         else:
             user_pane.session.set_persona(None)
-        msg_counts = user_pane.session.persona_message_count
+        msg_counts = user_pane.session.persona_message_counts
         for name, pane in panes.items():
             pane.update_match_display(
                 matcher.top_matches(name), message_counts=msg_counts
