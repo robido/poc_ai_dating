@@ -18,6 +18,12 @@ class Matcher:
     def __post_init__(self) -> None:
         self.matrix = {u: {v: 0.0 for v in self.users if v != u} for u in self.users}
 
+    def clear(self) -> None:
+        """Reset all match scores to zero."""
+        for u in self.matrix:
+            for v in self.matrix[u]:
+                self.matrix[u][v] = 0.0
+
     def calculate(self, ai_client: AIClient, profile_store: ProfileStore | None = None) -> None:
         """Ask the AI to rate compatibility for each user pair.
 

@@ -86,3 +86,8 @@ class ChatSession:
     def set_persona(self, persona: Optional[str]) -> None:
         """Switch the ambassador to act as a given persona."""
         self.matched_persona = persona
+
+    def clear_matches(self) -> None:
+        """Revert to the ambassador persona and clear match tracking."""
+        self.matched_persona = None
+        self.persona_message_counts.clear()

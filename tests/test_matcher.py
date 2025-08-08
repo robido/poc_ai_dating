@@ -36,3 +36,12 @@ def test_top_matches_use_ai_scores():
 
     assert matcher.top_matches("A", top_n=2) == [("B", 0.9), ("C", 0.6)]
     assert matcher.top_matches("B", top_n=2) == [("A", 0.9), ("C", 0.3)]
+
+
+def test_clear_resets_matrix():
+    matcher = Matcher(["A", "B"])
+    matcher.matrix["A"]["B"] = 0.5
+    matcher.matrix["B"]["A"] = 0.5
+    matcher.clear()
+    assert matcher.matrix["A"]["B"] == 0.0
+    assert matcher.matrix["B"]["A"] == 0.0

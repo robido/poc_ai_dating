@@ -310,8 +310,18 @@ def run_app() -> None:
                 matcher.top_matches(name), message_counts=msg_counts
             )
 
+    def clear() -> None:
+        matcher.clear()
+        user_pane.session.clear_matches()
+        for pane in panes.values():
+            pane.update_match_display([])
+
     tk.Button(root, text="Calculate matches", command=calculate).grid(
         row=1, column=0, columnspan=len(panes), pady=5
+    )
+
+    tk.Button(root, text="Clear matches", command=clear).grid(
+        row=2, column=0, columnspan=len(panes), pady=5
     )
 
     root.mainloop()

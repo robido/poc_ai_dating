@@ -58,6 +58,20 @@ def test_chat_session_tracks_persona_messages(tmp_path):
     assert session.persona_message_counts["Alex"] == 1
 
 
+def test_clear_matches_resets_persona(tmp_path):
+    store = ProfileStore(base_dir=tmp_path)
+    session = ChatSession(
+        ai_client=DummyAI(["profile", "reply"]),
+        profile_store=store,
+        history_path=tmp_path / "history.json",
+    )
+    session.set_persona("Pat")
+    session.persona_message_counts["Pat"] = 2
+    session.clear_matches()
+    assert session.matched_persona is None
+    assert session.persona_message_counts == {}
+
+
 def test_chat_session_persists_history(tmp_path):
     store = ProfileStore(base_dir=tmp_path)
     history = tmp_path / "history.json"
