@@ -7,7 +7,8 @@ from typing import List, Dict, Optional, Callable
 from .ai import AIClient
 from .storage import ProfileStore, ChatStore
 from .fake_user import FakeUser
-from .prompts import AMBASSADOR_ROLE
+from .prompts import AMBASSADOR_ROLE, COLLECT_INFO_PROMPT
+from .objectives import PROFILE_OBJECTIVES
 
 
 
@@ -50,6 +51,18 @@ class ChatSession:
                     f"{self.matched_persona}'s style."
                 )
                 messages = messages + [{"role": "system", "content": persona_prompt}]
+            else:
+                profile = self.profile_store.read(name).lower()
+                outstanding = [
+                    obj for obj in PROFILE_OBJECTIVES if obj.lower() not in profile
+                ]
+                if outstanding:
+                    info_prompt = COLLECT_INFO_PROMPT.replace(
+                        "{objectives}", ", ".join(outstanding)
+                    )
+                    messages = messages + [
+                        {"role": "system", "content": info_prompt}
+                    ]
             reply = self.ai_client.get_response(messages)
         self.messages.append({"role": "assistant", "content": reply})
         self.save_history()

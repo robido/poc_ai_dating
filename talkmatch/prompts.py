@@ -19,6 +19,7 @@ def _load_text(path: Path) -> str:
 AMBASSADOR_ROLE: str = _load_text(BASE_DIR / "ambassador_role.txt")
 GREETING_TEMPLATE: str = _load_text(BASE_DIR / "greeting_template.txt")
 BUILD_PROFILE_PROMPT: str = _load_text(BASE_DIR / "build_profile.txt")
+COLLECT_INFO_PROMPT: str = _load_text(BASE_DIR / "collect_info_prompt.txt")
 
 PERSONA_DESCRIPTIONS: Dict[str, str] = {}
 _persona_dir = BASE_DIR / "persona_descriptions"
