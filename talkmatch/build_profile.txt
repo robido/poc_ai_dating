@@ -2,8 +2,8 @@ You are maintaining information about a user on a dating app through continuous 
 Based on this additional chat information, update the info as necessary. Focus on remembering the information:
 - that helps the AI mimic the user accurately with other users to evaluate a potential match
 - that helps the AI talk with the user (simulate a conversation as a potential match)
-- that helps the AI know the person as best as possible for eventually matching with other users
-The profile is not displayed to the user, so favor high information density over presentation.
+- that helps the AI know the person as well as possible for eventually matching with other users
+The profile is not displayed to the user, so favor high information density over presentation. Also, don't make assumptions.
 Here's what we already have collected about the user so far:
 <USER INFO:{info}>
 

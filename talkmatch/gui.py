@@ -34,7 +34,7 @@ class ChatWindow(tk.Toplevel):
         self.session = session
         self._on_close = on_close
         self.title("TalkMatch Chat")
-        self.geometry("400x500")
+        self.geometry("300x500")
 
         tk.Label(self, text=USER_NAME, font=("Helvetica", 12, "bold")).pack()
         self.chat_area = scrolledtext.ScrolledText(self, state="disabled", font=("Helvetica", 12))
