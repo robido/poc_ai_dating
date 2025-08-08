@@ -63,7 +63,6 @@ and basic matchmaking to validate the concept and gather early feedback.
 - `talkmatch/storage/__init__.py` – data directory setup and export of stores.
 - `talkmatch/storage/chats.py` – persist chat histories.
 - `talkmatch/storage/match_matrix.py` – persist match score matrix.
-- `talkmatch/storage/message_counts.py` – track message counts between users.
 - `talkmatch/storage/profiles.py` – build and store user profiles.
 
 #### Persona descriptions

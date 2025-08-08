@@ -106,5 +106,5 @@ class ChatBox(tk.Toplevel):
         popup.title(f"{self.persona.name} profile")
         tk.Message(popup, text=data or "No data yet.", width=300).pack(padx=10, pady=10)
 
-    def update_match_display(self, matches, message_counts=None) -> None:
-        self.controller.update_match_display(matches, message_counts)
+    def update_match_display(self, matches) -> None:
+        self.controller.update_match_display(matches)

@@ -4,7 +4,7 @@ from __future__ import annotations
 import threading
 import time
 import tkinter as tk
-from typing import TYPE_CHECKING, Dict, List, Tuple
+from typing import TYPE_CHECKING, List, Tuple
 
 from ..ai import AIClient
 from ..chat import ChatSession
@@ -67,17 +67,11 @@ class PersonaChatController:
         threading.Thread(target=worker, daemon=True).start()
 
     def update_match_display(
-        self,
-        matches: List[Tuple[str, float]],
-        message_counts: Dict[Tuple[str, str], int] | None = None,
+        self, matches: List[Tuple[str, float]]
     ) -> None:
         match_area = self.chat_box.match_area
         match_area.configure(state="normal")
         match_area.delete("1.0", tk.END)
         for name, score in matches:
-            count = 0
-            if message_counts:
-                key = tuple(sorted([self.client_name, name]))
-                count = message_counts.get(key, 0)
-            match_area.insert(tk.END, f"{name}: {score:.2f} ({count} msgs)\n")
+            match_area.insert(tk.END, f"{name}: {score:.2f}\n")
         match_area.configure(state="disabled")

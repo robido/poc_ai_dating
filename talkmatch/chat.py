@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Callable
 
 from .ai import AIClient
-from .storage import ProfileStore, ChatStore, MessageCountStore
+from .storage import ProfileStore, ChatStore
 from .fake_user import FakeUser
 from .prompts import AMBASSADOR_ROLE
 
@@ -18,7 +18,6 @@ class ChatSession:
     ai_client: AIClient
     profile_store: ProfileStore = field(default_factory=ProfileStore)
     chat_store: ChatStore | None = None
-    message_counts: MessageCountStore | None = None
     messages: List[Dict[str, str]] = field(
         default_factory=lambda: [{"role": "system", "content": AMBASSADOR_ROLE}]
     )
@@ -51,8 +50,6 @@ class ChatSession:
                 messages = messages + [{"role": "system", "content": persona_prompt}]
             reply = self.ai_client.get_response(messages)
         self.messages.append({"role": "assistant", "content": reply})
-        if self.matched_persona and self.message_counts:
-            self.message_counts.increment(name, self.matched_persona)
         self.save_history()
         if self.update_callback:
             self.update_callback()

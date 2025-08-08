@@ -11,7 +11,6 @@ from .json_store import JsonStore  # noqa: E402
 from .profiles import ProfileStore  # noqa: E402
 from .chats import ChatStore  # noqa: E402
 from .match_matrix import MatchMatrixStore  # noqa: E402
-from .message_counts import MessageCountStore  # noqa: E402
 
 __all__ = [
     "BASE_DIR",
@@ -19,5 +18,4 @@ __all__ = [
     "ProfileStore",
     "ChatStore",
     "MatchMatrixStore",
-    "MessageCountStore",
 ]

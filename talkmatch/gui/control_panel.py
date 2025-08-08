@@ -49,10 +49,10 @@ class ControlPanel(tk.Tk):
     def refresh_matches(self) -> None:
         self.session_manager.refresh_matches()
 
-    def update_match_display(self, matches, message_counts) -> None:
+    def update_match_display(self, matches) -> None:
         for name, win in self.windows.items():
             win.controller.update_match_display(
-                matches.get(name, []), message_counts=message_counts
+                matches.get(name, [])
             )
 
     def bring_all_to_front(self) -> None:
