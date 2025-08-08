@@ -8,6 +8,26 @@ import re
 from .ai import AIClient
 from .storage import ProfileStore, MatchMatrixStore
 
+_SCORE_RE = re.compile(r"0(?:\.\d+)?|1(?:\.0+)?")
+
+
+def build_prompt(user_a: str, user_b: str, profiles: Dict[str, str]) -> str:
+    """Construct the compatibility prompt for two users."""
+    profile_a = profiles.get(user_a, "") or "No information."
+    profile_b = profiles.get(user_b, "") or "No information."
+    return (
+        "Rate the romantic compatibility of the two people on a scale from 0 to 1.\n"
+        f"Person A profile:\n{profile_a}\n"
+        f"Person B profile:\n{profile_b}\n"
+        "Respond with only the numeric score."
+    )
+
+
+def _parse_score(reply: str) -> float:
+    """Extract a numeric score from the AI reply."""
+    match = _SCORE_RE.search(reply)
+    return float(match.group()) if match else 0.0
+
 
 @dataclass
 class Matcher:
@@ -40,20 +60,12 @@ class Matcher:
         """
 
         store = profile_store or ProfileStore()
+        profiles = {user: store.read(user) for user in self.users}
         for i, u in enumerate(self.users):
-            profile_u = store.read(u)
             for v in self.users[i + 1:]:
-                profile_v = store.read(v)
-                prompt = (
-                    "Rate the romantic compatibility of the two people on a scale "
-                    "from 0 to 1.\n"
-                    f"Person A profile:\n{profile_u or 'No information.'}\n"
-                    f"Person B profile:\n{profile_v or 'No information.'}\n"
-                    "Respond with only the numeric score."
-                )
+                prompt = build_prompt(u, v, profiles)
                 reply = ai_client.get_response([{"role": "user", "content": prompt}])
-                match = re.search(r"0(?:\.\d+)?|1(?:\.0+)?", reply)
-                score = float(match.group()) if match else 0.0
+                score = _parse_score(reply)
                 self.matrix[u][v] = score
                 self.matrix[v][u] = score
         self._save()
