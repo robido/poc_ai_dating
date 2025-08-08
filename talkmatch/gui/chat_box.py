@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-import threading
-import time
 import tkinter as tk
 from tkinter import scrolledtext
-from typing import Dict, List, Tuple
 
-from ..ai import AIClient
 from ..chat import ChatSession
 from ..personas import Persona
 from ..prompts import GREETING_TEMPLATE
+from .persona_controller import PersonaChatController
 
 ROLE_COLORS = {"Ambassador": "green", "Other": "purple"}
-# Shorten the pause before the AI responds so conversations feel snappier.
-REPLY_DELAY = 1
 
 def make_greeting(name: str) -> str:
     return GREETING_TEMPLATE.format(name=name)
@@ -28,8 +23,9 @@ class ChatBox(tk.Toplevel):
         super().__init__(master)
         self.persona = persona
         self.session = session
-        self.persona_ai = AIClient()
-        self.client_name = persona.name
+        self.controller: PersonaChatController = PersonaChatController(
+            self, persona, session
+        )
 
         # When this window is restored, raise all windows so they stay grouped.
         self.bind("<Map>", lambda event: self.master.bring_all_to_front())
@@ -64,18 +60,17 @@ class ChatBox(tk.Toplevel):
 
         if len(self.session.messages) > 1:
             for msg in self.session.messages[1:]:
-                role = persona.name if msg["role"] == "user" else self.ambassador_name()
+                role = (
+                    persona.name
+                    if msg["role"] == "user"
+                    else self.controller.ambassador_name()
+                )
                 self.display_message(role, msg["content"])
         else:
             greeting = make_greeting(persona.name)
-            self.display_message(self.ambassador_name(), greeting)
+            self.display_message(self.controller.ambassador_name(), greeting)
             self.session.messages.append({"role": "assistant", "content": greeting})
             self.session.save_history()
-
-    def ambassador_name(self) -> str:
-        if self.session.matched_persona:
-            return f"Ambassador ({self.session.matched_persona})"
-        return "Ambassador"
 
     def display_message(self, role: str, content: str) -> None:
         if not content.strip():
@@ -100,30 +95,10 @@ class ChatBox(tk.Toplevel):
         if not text:
             return
         self.entry.delete(0, tk.END)
-        self.display_message(self.persona.name, text)
-
-        def run() -> None:
-            time.sleep(REPLY_DELAY)
-            reply = self.session.send_client_message(self.persona.name, text)
-            self.after(0, lambda: self.display_message(self.ambassador_name(), reply))
-
-        threading.Thread(target=run, daemon=True).start()
+        self.controller.send_message(text)
 
     def next_message(self) -> None:
-        def worker() -> None:
-            context = [{"role": "system", "content": self.persona.system_prompt}]
-            context.extend(self.session.messages[1:])
-            persona_msg = self.persona_ai.get_response(context)
-            self.after(0, lambda: self.display_message(self.persona.name, persona_msg))
-
-            def reply_worker() -> None:
-                time.sleep(REPLY_DELAY)
-                reply = self.session.send_client_message(self.persona.name, persona_msg)
-                self.after(0, lambda: self.display_message(self.ambassador_name(), reply))
-
-            threading.Thread(target=reply_worker, daemon=True).start()
-
-        threading.Thread(target=worker, daemon=True).start()
+        self.controller.next_message()
 
     def show_profile(self) -> None:
         data = self.session.profile_store.read(self.persona.name)
@@ -131,17 +106,5 @@ class ChatBox(tk.Toplevel):
         popup.title(f"{self.persona.name} profile")
         tk.Message(popup, text=data or "No data yet.", width=300).pack(padx=10, pady=10)
 
-    def update_match_display(
-        self,
-        matches: List[Tuple[str, float]],
-        message_counts: Dict[Tuple[str, str], int] | None = None,
-    ) -> None:
-        self.match_area.configure(state="normal")
-        self.match_area.delete("1.0", tk.END)
-        for name, score in matches:
-            count = 0
-            if message_counts:
-                key = tuple(sorted([self.client_name, name]))
-                count = message_counts.get(key, 0)
-            self.match_area.insert(tk.END, f"{name}: {score:.2f} ({count} msgs)\n")
-        self.match_area.configure(state="disabled")
+    def update_match_display(self, matches, message_counts=None) -> None:
+        self.controller.update_match_display(matches, message_counts)

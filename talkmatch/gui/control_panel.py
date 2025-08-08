@@ -84,7 +84,7 @@ class ControlPanel(tk.Tk):
     def refresh_matches(self) -> None:
         msg_counts = self.message_counts.counts
         for name, win in self.windows.items():
-            win.update_match_display(
+            win.controller.update_match_display(
                 self.matcher.top_matches(name), message_counts=msg_counts
             )
 
