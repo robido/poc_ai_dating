@@ -339,8 +339,17 @@ def run_app() -> None:
             user_pane.session.set_persona(None)
         refresh_matches()
 
+    def clear_matches() -> None:
+        matcher.clear()
+        user_pane.session.set_persona(None)
+        ChatSession.message_counts.clear()
+        refresh_matches()
+
     tk.Button(root, text="Calculate matches", command=calculate).grid(
         row=1, column=0, columnspan=len(panes), pady=5
+    )
+    tk.Button(root, text="Clear matches", command=clear_matches).grid(
+        row=2, column=0, columnspan=len(panes), pady=5
     )
 
     root.mainloop()
