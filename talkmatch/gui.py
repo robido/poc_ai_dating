@@ -68,20 +68,26 @@ class ChatBox(tk.Toplevel):
 
         if len(self.session.messages) > 1:
             for msg in self.session.messages[1:]:
-                role = persona.name if msg["role"] == "user" else "Ambassador"
+                role = persona.name if msg["role"] == "user" else self.ambassador_name()
                 self.display_message(role, msg["content"])
         else:
             greeting = make_greeting(persona.name)
-            self.display_message("Ambassador", greeting)
+            self.display_message(self.ambassador_name(), greeting)
             self.session.messages.append({"role": "assistant", "content": greeting})
             self.session.save_history()
 
+    def ambassador_name(self) -> str:
+        if self.session.matched_persona:
+            return f"Ambassador ({self.session.matched_persona})"
+        return "Ambassador"
+
     def display_message(self, role: str, content: str) -> None:
         self.chat_area.configure(state="normal")
-        tag_role = role.replace(" ", "_")
+        tag_role = role.replace(" ", "_").replace("(", "").replace(")", "")
         name_tag = f"{tag_role}_name"
         if name_tag not in self.chat_area.tag_names():
-            color = ROLE_COLORS.get(role, "purple")
+            base_role = role.split(" (", 1)[0]
+            color = ROLE_COLORS.get(base_role, "purple")
             self.chat_area.tag_config(tag_role, foreground=color)
             self.chat_area.tag_config(
                 name_tag, foreground=color, font=("Helvetica", 10, "bold")
@@ -101,8 +107,7 @@ class ChatBox(tk.Toplevel):
         def run() -> None:
             time.sleep(REPLY_DELAY)
             reply = self.session.send_client_message(self.persona.name, text)
-            role = self.session.matched_persona or "Ambassador"
-            self.after(0, lambda: self.display_message(role, reply))
+            self.after(0, lambda: self.display_message(self.ambassador_name(), reply))
 
         threading.Thread(target=run, daemon=True).start()
 
@@ -116,7 +121,7 @@ class ChatBox(tk.Toplevel):
             def reply_worker() -> None:
                 time.sleep(REPLY_DELAY)
                 reply = self.session.send_client_message(self.persona.name, persona_msg)
-                self.after(0, lambda: self.display_message("Ambassador", reply))
+                self.after(0, lambda: self.display_message(self.ambassador_name(), reply))
 
             threading.Thread(target=reply_worker, daemon=True).start()
 
