@@ -280,13 +280,13 @@ def run_app() -> None:
         panes[persona.name] = pane
 
     def calculate() -> None:
-        matcher.calculate()
+        matcher.calculate(AIClient())
         top = matcher.top_matches(USER_NAME, 1)
         if top and top[0][1] > 0:
             user_pane.session.set_persona(top[0][0])
         else:
             user_pane.session.set_persona(None)
-        msg_counts = user_pane.session.persona_message_counts
+        msg_counts = user_pane.session.persona_message_count
         for name, pane in panes.items():
             pane.update_match_display(
                 matcher.top_matches(name), message_counts=msg_counts
