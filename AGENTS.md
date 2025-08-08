@@ -23,6 +23,18 @@ and transitions conversations toward real human matches. This repository hosts
 the Phase 0 local proof of concept: a simple Python GUI demo with fake personas
 and basic matchmaking to validate the concept and gather early feedback.
 
+## Common Vocabulary
+
+- **Ambassador** – the AI matchmaker that greets users and guides chats toward human-to-human connections.
+- **Persona** – a scripted character with a profile and voice; the ambassador can impersonate personas to simulate matches.
+- **Chat window** – the GUI where conversation with a persona happens; the MVP uses a single persistent window.
+- **Control panel** – an admin interface that launches persona chat windows and triggers match calculations.
+- **Chat session** – backend object managing message history, profile updates, and persona switching.
+- **Profile** – stored description of a user's traits and preferences used to compute compatibility.
+- **Match score** – numeric compatibility between users, computed by the matcher and shown in each chat window.
+- **Match matrix** – persisted table of match scores between every pair of users.
+- **Fake user** – automated script that simulates human replies for demos and tests.
+
 ## Repository Overview
 
 - `AGENTS.md` – project guidelines.
