@@ -15,7 +15,8 @@ from .personas import PERSONAS, Persona
 from .persistent import Persistent
 
 ROLE_COLORS = {"Ambassador": "green", "Other": "purple"}
-REPLY_DELAY = 3
+# Shorten the pause before the AI responds so conversations feel snappier.
+REPLY_DELAY = 1
 
 GREETING_TEMPLATE = Path(__file__).with_name("greeting_template.txt").read_text().strip()
 
@@ -34,6 +35,9 @@ class ChatBox(tk.Toplevel):
         self.persona_ai = AIClient()
         self.client_name = persona.name
 
+        # When this window is restored, raise all windows so they stay grouped.
+        self.bind("<Map>", lambda event: self.master.bring_all_to_front())
+
         self.title(persona.name)
         # Increase the window height to give the matches list more space.
         self.geometry("300x600")
@@ -51,7 +55,7 @@ class ChatBox(tk.Toplevel):
         btn_frame = tk.Frame(self)
         btn_frame.pack(pady=(0, 5))
         tk.Button(btn_frame, text="Send", command=self.send_message).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Next", command=self.next_message).pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_frame, text="AI", command=self.next_message).pack(side=tk.LEFT, padx=5)
         tk.Button(btn_frame, text="Show Profile", command=self.show_profile).pack(
             side=tk.LEFT, padx=5
         )
@@ -147,7 +151,7 @@ class ControlPanel(tk.Tk):
         super().__init__()
         self.title("TalkMatch Control Panel")
         # Position the control panel and chat windows so they do not overlap.
-        self.geometry("300x200+50+50")
+        self.geometry("300x200+20+50")
         self.persistent = Persistent()
         self.profile_store = self.persistent.profile_store()
         ChatSession.message_counts = self.persistent.load_message_counts()
@@ -168,6 +172,9 @@ class ControlPanel(tk.Tk):
             # Arrange chat windows horizontally with a small gap.
             win.geometry(f"+{350 + idx * 320}+50")
             self.windows[persona.name] = win
+
+        # When any window is restored, keep the whole set of windows on top.
+        self.bind("<Map>", lambda event: self.bring_all_to_front())
 
         self.matcher = Matcher(
             [p.name for p in self.personas], path=self.persistent.match_matrix_path()
@@ -207,6 +214,15 @@ class ControlPanel(tk.Tk):
             win.update_match_display(
                 self.matcher.top_matches(name), message_counts=msg_counts
             )
+
+    def bring_all_to_front(self) -> None:
+        """Raise all application windows above others."""
+        windows = [self, *self.windows.values()]
+        for win in windows:
+            win.lift()
+            win.attributes("-topmost", True)
+        # Allow other apps to come to the foreground afterwards.
+        self.after(0, lambda: [w.attributes("-topmost", False) for w in windows])
 
 
 def run_app() -> None:
