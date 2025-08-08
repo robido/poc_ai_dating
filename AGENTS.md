@@ -3,7 +3,9 @@
 This project strives for a clean, maintainable codebase that stays manageable for
 limited-context AI agents even as the code grows. Contributors should:
 
-- Keep files focused and small, favoring single responsibility per module.
+- Keep files focused and small, favoring single responsibility per module;
+  such separation enables multiple tasks to progress in parallel and reduces
+  the risk of merge conflicts.
 - Follow DRY (Don't Repeat Yourself) principles and avoid duplication.
 - Write unit tests whenever feasible to validate new behavior or guard against
   regressions.
