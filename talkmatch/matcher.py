@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 from .ai import AIClient
@@ -13,10 +15,25 @@ class Matcher:
     """Compute and store match scores between users."""
 
     users: List[str]
+    path: Path | None = None
     matrix: Dict[str, Dict[str, float]] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.matrix = {u: {v: 0.0 for v in self.users if v != u} for u in self.users}
+        if self.path and self.path.exists():
+            self.matrix = json.loads(self.path.read_text(encoding="utf-8"))
+            # ensure all users exist in the matrix
+            for u in self.users:
+                self.matrix.setdefault(u, {})
+                for v in self.users:
+                    if u != v:
+                        self.matrix[u].setdefault(v, 0.0)
+        else:
+            self.matrix = {u: {v: 0.0 for v in self.users if v != u} for u in self.users}
+
+    def _save(self) -> None:
+        if self.path:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            self.path.write_text(json.dumps(self.matrix), encoding="utf-8")
 
     def calculate(self, ai_client: AIClient, profile_store: ProfileStore | None = None) -> None:
         """Ask the AI to rate compatibility for each user pair.
@@ -44,6 +61,7 @@ class Matcher:
                 score = float(match.group()) if match else 0.0
                 self.matrix[u][v] = score
                 self.matrix[v][u] = score
+        self._save()
 
     def top_matches(self, user: str, top_n: int = 3) -> List[Tuple[str, float]]:
         """Return the top ``top_n`` matches for ``user``."""
