@@ -7,6 +7,7 @@ from typing import Dict
 
 from ..ai import AIClient
 from ..chat import ChatSession
+from ..storage.history import HistoryManager
 from ..matcher import Matcher
 from ..personas import PERSONAS
 from ..persistent import Persistent
@@ -24,18 +25,21 @@ class ControlPanel(tk.Tk):
         self.geometry("300x200+20+50")
         self.persistent = Persistent()
         self.profile_store = self.persistent.profile_store()
-        ChatSession.message_counts = self.persistent.load_message_counts()
+        HistoryManager.message_counts = self.persistent.load_message_counts()
 
         self.personas = PERSONAS
         self.sessions: Dict[str, ChatSession] = {}
         self.windows: Dict[str, ChatBox] = {}
 
         for idx, persona in enumerate(self.personas):
+            history = HistoryManager(
+                persistent=self.persistent,
+                history_path=self.persistent.chat_history_path(persona.name),
+            )
             session = ChatSession(
                 AIClient(),
                 profile_store=self.profile_store,
-                history_path=self.persistent.chat_history_path(persona.name),
-                persistent=self.persistent,
+                history_manager=history,
             )
             self.sessions[persona.name] = session
             win = ChatBox(self, persona, session)
@@ -74,12 +78,11 @@ class ControlPanel(tk.Tk):
         self.matcher.clear()
         for session in self.sessions.values():
             session.set_persona(None)
-        ChatSession.message_counts.clear()
-        self.persistent.save_message_counts({})
+        HistoryManager.clear_message_counts(self.persistent)
         self.refresh_matches()
 
     def refresh_matches(self) -> None:
-        msg_counts = ChatSession.message_counts
+        msg_counts = HistoryManager.message_counts
         for name, win in self.windows.items():
             win.update_match_display(
                 self.matcher.top_matches(name), message_counts=msg_counts
