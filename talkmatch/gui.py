@@ -250,7 +250,10 @@ class PersonaChatPane(ChatPane):
     """Chat pane representing an AI persona chatting with the assistant."""
 
     def __init__(self, master: tk.Misc, persona: Persona):
-        session = ChatSession(AIClient())
+        history_file = Path(
+            f"chat_history_{persona.name.replace(' ', '_').lower()}.json"
+        )
+        session = ChatSession(AIClient(), history_path=history_file)
         super().__init__(master, session, persona.name)
         self.persona = persona
         self.persona_ai = AIClient()
@@ -258,9 +261,15 @@ class PersonaChatPane(ChatPane):
         self.add_profile_button()
         self.add_match_area()
 
-        greeting = make_greeting(persona.name)
-        self.display_message("Ambassador", greeting)
-        self.session.messages.append({"role": "assistant", "content": greeting})
+        if len(self.session.messages) > 1:
+            for msg in self.session.messages[1:]:
+                role = persona.name if msg["role"] == "user" else "Ambassador"
+                self.display_message(role, msg["content"])
+        else:
+            greeting = make_greeting(persona.name)
+            self.display_message("Ambassador", greeting)
+            self.session.messages.append({"role": "assistant", "content": greeting})
+            self.session.save_history()
 
     def next_message(self) -> None:
         def worker() -> None:
