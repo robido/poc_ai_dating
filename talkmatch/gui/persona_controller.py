@@ -26,10 +26,8 @@ class PersonaChatController:
         self.persona_ai = AIClient()
         self.client_name = persona.name
 
-    def ambassador_name(self) -> str:
-        if self.session.matched_persona:
-            return f"Ambassador ({self.session.matched_persona})"
-        return "Ambassador"
+    def ambassador_label(self) -> str:
+        return self.session.ambassador_label()
 
     def send_message(self, text: str) -> None:
         self.chat_box.display_message(self.persona.name, text)
@@ -38,7 +36,7 @@ class PersonaChatController:
             time.sleep(REPLY_DELAY)
             reply = self.session.send_client_message(self.persona.name, text)
             self.chat_box.after(
-                0, lambda: self.chat_box.display_message(self.ambassador_name(), reply)
+                0, lambda: self.chat_box.display_message(self.ambassador_label(), reply)
             )
 
         threading.Thread(target=run, daemon=True).start()
@@ -58,7 +56,7 @@ class PersonaChatController:
                 self.chat_box.after(
                     0,
                     lambda: self.chat_box.display_message(
-                        self.ambassador_name(), reply
+                        self.ambassador_label(), reply
                     ),
                 )
 

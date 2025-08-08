@@ -63,12 +63,12 @@ class ChatBox(tk.Toplevel):
                 role = (
                     persona.name
                     if msg["role"] == "user"
-                    else self.controller.ambassador_name()
+                    else self.controller.ambassador_label()
                 )
                 self.display_message(role, msg["content"])
         else:
             greeting = make_greeting(persona.name)
-            self.display_message(self.controller.ambassador_name(), greeting)
+            self.display_message(self.controller.ambassador_label(), greeting)
             self.session.messages.append({"role": "assistant", "content": greeting})
             self.session.save_history()
 
@@ -76,10 +76,16 @@ class ChatBox(tk.Toplevel):
         if not content.strip():
             content = "Empty response"
         self.chat_area.configure(state="normal")
-        tag_role = role.replace(" ", "_").replace("(", "").replace(")", "")
+        tag_role = (
+            role.replace(" ", "_")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("[", "")
+            .replace("]", "")
+        )
         name_tag = f"{tag_role}_name"
         if name_tag not in self.chat_area.tag_names():
-            base_role = role.split(" (", 1)[0]
+            base_role = role.split(" [", 1)[0]
             color = ROLE_COLORS.get(base_role, "purple")
             self.chat_area.tag_config(tag_role, foreground=color)
             self.chat_area.tag_config(

@@ -23,6 +23,7 @@ class ChatSession:
     )
     fake_user: Optional[FakeUser] = None
     matched_persona: Optional[str] = None
+    ambassador_status: str = field(init=False, default="")
     update_callback: Optional[Callable[[], None]] = None
 
     def __post_init__(self) -> None:
@@ -30,6 +31,7 @@ class ChatSession:
             loaded = self.chat_store.load()
             if loaded:
                 self.messages = loaded
+        self.set_persona(None)
 
     def send_client_message(self, name: str, text: str) -> str:
         """Handle a message from any client (user or persona)."""
@@ -62,6 +64,17 @@ class ChatSession:
     def switch_to_fake_user(self, fake_user: FakeUser) -> None:
         self.fake_user = fake_user
 
+    def set_status(self, status: str) -> None:
+        """Update the ambassador's activity label."""
+        self.ambassador_status = status
+
+    def ambassador_label(self) -> str:
+        return f"Ambassador [{self.ambassador_status}]"
+
     def set_persona(self, persona: Optional[str]) -> None:
         """Switch the ambassador to act as a given persona."""
         self.matched_persona = persona
+        if persona:
+            self.set_status(f"acting as {persona}")
+        else:
+            self.set_status("collecting info")
