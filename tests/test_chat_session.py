@@ -47,6 +47,7 @@ def test_chat_session_switch_to_fake_user(tmp_path):
 def test_chat_session_tracks_persona_messages(tmp_path):
     store = ProfileStore(base_dir=tmp_path)
     (tmp_path / "Alex.txt").write_text("Profile", encoding="utf-8")
+    ChatSession.message_counts.clear()
     session = ChatSession(
         ai_client=DummyAI(["Stored profile", "AI reply"]),
         profile_store=store,
@@ -55,7 +56,8 @@ def test_chat_session_tracks_persona_messages(tmp_path):
     session.set_persona("Alex")
     reply = session.send_client_message("Alice", "Hi")
     assert reply == "AI reply"
-    assert session.persona_message_counts["Alex"] == 1
+    pair = tuple(sorted(["Alice", "Alex"]))
+    assert ChatSession.message_counts[pair] == 1
 
 
 def test_chat_session_persists_history(tmp_path):

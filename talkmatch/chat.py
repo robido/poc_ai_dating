@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple, Callable, ClassVar
 import json
 
 from .ai import AIClient
@@ -38,8 +38,10 @@ class ChatSession:
     )
     fake_user: Optional[FakeUser] = None
     matched_persona: Optional[str] = None
-    persona_message_counts: Dict[str, int] = field(default_factory=dict)
+    update_callback: Optional[Callable[[], None]] = None
     history_path: Optional[Path] = None
+
+    message_counts: ClassVar[Dict[Tuple[str, str], int]] = {}
 
     def __post_init__(self) -> None:
         if self.history_path and self.history_path.exists():
@@ -68,10 +70,13 @@ class ChatSession:
             reply = self.ai_client.get_response(messages)
         self.messages.append({"role": "assistant", "content": reply})
         if self.matched_persona:
-            self.persona_message_counts[self.matched_persona] = (
-                self.persona_message_counts.get(self.matched_persona, 0) + 1
+            pair = tuple(sorted([name, self.matched_persona]))
+            ChatSession.message_counts[pair] = (
+                ChatSession.message_counts.get(pair, 0) + 1
             )
         self.save_history()
+        if self.update_callback:
+            self.update_callback()
         return reply
 
     def save_history(self) -> None:
