@@ -24,10 +24,11 @@ class ReadinessFilter(UserFilter):
         self.profile_store = profile_store
 
     def filter(self, users: List[str]) -> List[str]:
-        return [
-            name
-            for name in users
-            if self.evaluator.is_ready(
-                PROFILE_OBJECTIVES, self.profile_store.read(name)
-            )
-        ]
+        ready: List[str] = []
+        for name in users:
+            profile = self.profile_store.read(name)
+            if self.evaluator.is_ready(PROFILE_OBJECTIVES, profile):
+                ready.append(name)
+            else:
+                print(f"[Readiness] {name} has too little profile info; skipping.")
+        return ready

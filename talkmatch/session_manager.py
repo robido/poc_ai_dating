@@ -105,33 +105,51 @@ class SessionManager:
         session = self.sessions[name]
         persona = session.ambassador.persona
         if not persona:
+            print(f"[Linking] {name} has no persona assigned; cannot link.")
             return
         other = self.sessions.get(persona)
         if not other or other.ambassador.persona != name:
+            print(
+                f"[Linking] {name} acting for {persona}, but {persona} is not reciprocating."
+            )
             return
-        if (
-            len(self._user_messages(session)) >= self.link_threshold
-            and len(self._user_messages(other)) >= self.link_threshold
-        ):
-            context_a = self._last_user_message(other)
-            context_b = self._last_user_message(session)
-            session.ambassador.begin_link(persona, context_a)
-            other.ambassador.begin_link(name, context_b)
-            self._maybe_finalize_link(name)
+        user_msgs = len(self._user_messages(session))
+        other_msgs = len(self._user_messages(other))
+        if user_msgs < self.link_threshold or other_msgs < self.link_threshold:
+            print(
+                f"[Linking] waiting for more chats: {name}={user_msgs}, {persona}={other_msgs}"
+            )
+            return
+        context_a = self._last_user_message(other)
+        context_b = self._last_user_message(session)
+        print(f"[Linking] entering linking mode for {name} and {persona}")
+        session.ambassador.begin_link(persona, context_a)
+        other.ambassador.begin_link(name, context_b)
+        self._maybe_finalize_link(name)
 
     def _maybe_finalize_link(self, name: str) -> None:
         session = self.sessions[name]
         if session.ambassador.state != "linking":
+            print(f"[Linking] {name} not in linking state; cannot finalize.")
             return
         other_name = session.ambassador.link_target
         if not other_name:
+            print(f"[Linking] {name} has no link target; cannot finalize.")
             return
         other = self.sessions[other_name]
         if other.ambassador.state != "linking" or other.ambassador.link_target != name:
+            print(
+                f"[Linking] waiting for {other_name} to enter linking state with {name}."
+            )
             return
         if self._last_user_message(session).lower() == self._last_user_message(other).lower():
             session.ambassador.finalize_link()
             other.ambassador.finalize_link()
+            print(f"[Linking] {name} and {other_name} are now linked.")
+        else:
+            print(
+                f"[Linking] waiting for conversation sync between {name} and {other_name}."
+            )
 
     def send_message(self, name: str, text: str) -> str:
         reply = self.sessions[name].send_client_message(name, text)
