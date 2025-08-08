@@ -83,6 +83,8 @@ class ChatBox(tk.Toplevel):
         return "Ambassador"
 
     def display_message(self, role: str, content: str) -> None:
+        if not content.strip():
+            content = "Empty response"
         self.chat_area.configure(state="normal")
         tag_role = role.replace(" ", "_").replace("(", "").replace(")", "")
         name_tag = f"{tag_role}_name"
