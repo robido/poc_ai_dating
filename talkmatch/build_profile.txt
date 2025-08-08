@@ -5,7 +5,10 @@ Based on this additional chat information, update the info as necessary. Focus o
 - that helps the AI know the person as well as possible for eventually matching with other users
 The profile is not displayed to the user, so favor high information density over presentation. Also, don't make assumptions.
 Here's what we already have collected about the user so far:
-<USER INFO:{info}>
+<USER_INFO>{info}</USER_INFO>
 
 Here's the latest chat messages (don't dilute existing information too much):
-<CHAT MESSAGES:{messages}>
+<CHAT_MESSAGES>{messages}</CHAT_MESSAGES>
+
+Return only the updated profile formatted exactly as:
+<USER_INFO>new information</USER_INFO>

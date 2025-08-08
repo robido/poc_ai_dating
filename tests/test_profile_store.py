@@ -20,10 +20,12 @@ class CaptureAI:
 
 
 def test_profile_store_uses_message_placeholder(tmp_path):
-    ai = CaptureAI(["existing profile", "updated profile"])
+    ai = CaptureAI(
+        ["<USER_INFO>existing profile</USER_INFO>", "<USER_INFO>updated profile</USER_INFO>"]
+    )
     store = ProfileStore(base_dir=tmp_path)
     store.update(ai, "user", "first message")
     store.update(ai, "user", "second message")
     prompt = ai.last_messages[0]["content"]
-    assert "<USER INFO:existing profile>" in prompt
-    assert "<CHAT MESSAGES:second message>" in prompt
+    assert "<USER_INFO>existing profile</USER_INFO>" in prompt
+    assert "<CHAT_MESSAGES>second message</CHAT_MESSAGES>" in prompt
