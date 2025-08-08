@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import List, Dict, Optional, Callable
 
 from .ai import AIClient
 from .storage import ProfileStore, ChatStore, MessageCountStore
 from .fake_user import FakeUser
+from .prompts import AMBASSADOR_ROLE
 
-# Load the ambassador role description from a text file to keep the code tidy.
-AMBASSADOR_ROLE = Path(__file__).with_name("ambassador_role.txt").read_text().strip()
 
 
 @dataclass
