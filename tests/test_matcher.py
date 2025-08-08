@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Tests for the AI-based matcher."""
 
-from talkmatch.matcher import Matcher
+from talkmatch.matcher import Matcher, build_prompt, _parse_score
 
 
 class DummyAI:
@@ -59,3 +59,13 @@ def test_clear_resets_scores():
     matcher.clear()
     assert matcher.matrix["A"]["B"] == 0.0
     assert matcher.matrix["B"]["A"] == 0.0
+
+
+def test_build_prompt_and_parse_score_helpers():
+    profiles = {"A": "profile a", "B": ""}
+    prompt = build_prompt("A", "B", profiles)
+    assert "profile a" in prompt
+    assert "No information." in prompt
+    assert _parse_score("0.75") == 0.75
+    assert _parse_score("score: 1.0") == 1.0
+    assert _parse_score("not a score") == 0.0
