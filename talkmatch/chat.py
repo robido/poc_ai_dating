@@ -33,9 +33,7 @@ class ChatSession:
     ai_client: AIClient
     profile_store: ProfileStore = field(default_factory=ProfileStore)
     messages: List[Dict[str, str]] = field(
-        default_factory=lambda: [
-            {"role": "system", "content": "You are TalkMatch, an AI dating assistant."}
-        ]
+        default_factory=lambda: [{"role": "system", "content": AMBASSADOR_ROLE}]
     )
     fake_user: Optional[FakeUser] = None
 
