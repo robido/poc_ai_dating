@@ -87,4 +87,5 @@ def test_collect_info_prompt_added(tmp_path):
         m["content"] for m in ai.last_messages if m["role"] == "system"
     ]
     assert len(system_contents) >= 2
+    assert "kids" in system_contents[0]
     assert "kids" in system_contents[-1]

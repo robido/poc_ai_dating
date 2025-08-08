@@ -1,5 +1,7 @@
 import pytest
 from talkmatch.session_manager import SessionManager
+import pytest
+from talkmatch.session_manager import SessionManager
 from talkmatch.personas import Persona
 from talkmatch import filters
 
@@ -26,6 +28,7 @@ def test_session_manager_respects_readiness_filter(
 ):
     personas = [Persona("A", "a"), Persona("B", "b"), Persona("C", "c")]
     factory = DummyFactory([
+        ["80", "79", "80"],  # AI for readiness filter
         [],  # AI for session A
         [],  # AI for session B
         [],  # AI for session C
@@ -40,9 +43,6 @@ def test_session_manager_respects_readiness_filter(
     })
 
     monkeypatch.setattr(filters, "PROFILE_OBJECTIVES", objectives)
-    readiness_ai = DummyAI(["80", "79", "80"])
-    readiness_filter = filters.ReadinessFilter(readiness_ai, manager.profile_store)
-    manager.filters = [readiness_filter]
 
     manager.calculate()
 

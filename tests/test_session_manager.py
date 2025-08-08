@@ -26,7 +26,7 @@ def test_session_manager_handles_matches(tmp_path):
         [],                      # AI for session B
         ["0.8"],                 # AI for matcher
     ])
-    manager = SessionManager(personas=personas, base_dir=tmp_path, ai_client_factory=factory)
+    manager = SessionManager(personas=personas, base_dir=tmp_path, ai_client_factory=factory, filters=[])
     captured = {}
     manager.update_callback = lambda m: captured.update({"matches": m})
 
@@ -54,7 +54,25 @@ def test_session_manager_applies_filters(tmp_path):
         [],  # AI for matcher
     ])
     manager = SessionManager(
-        personas=personas, base_dir=tmp_path, ai_client_factory=factory, filters=[ExcludeBFilter()]
+        personas=personas,
+        base_dir=tmp_path,
+        ai_client_factory=factory,
+        filters=[ExcludeBFilter()],
+    )
+    manager.calculate()
+    assert manager.sessions["A"].matched_persona is None
+    assert manager.sessions["B"].matched_persona is None
+
+
+def test_no_impersonation_on_low_match(tmp_path):
+    personas = [Persona("A", "a"), Persona("B", "b")]
+    factory = DummyFactory([
+        [],  # AI for session A
+        [],  # AI for session B
+        ["0.5"],  # AI for matcher
+    ])
+    manager = SessionManager(
+        personas=personas, base_dir=tmp_path, ai_client_factory=factory, filters=[]
     )
     manager.calculate()
     assert manager.sessions["A"].matched_persona is None

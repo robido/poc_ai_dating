@@ -11,6 +11,13 @@ from .prompts import AMBASSADOR_ROLE, COLLECT_INFO_PROMPT
 from .objectives import PROFILE_OBJECTIVES
 
 
+AMBASSADOR_SYSTEM_PROMPT = (
+    AMBASSADOR_ROLE
+    + "\n"
+    + COLLECT_INFO_PROMPT.replace("{objectives}", ", ".join(PROFILE_OBJECTIVES))
+)
+
+
 
 @dataclass
 class ChatSession:
@@ -20,7 +27,9 @@ class ChatSession:
     profile_store: ProfileStore = field(default_factory=ProfileStore)
     chat_store: ChatStore | None = None
     messages: List[Dict[str, str]] = field(
-        default_factory=lambda: [{"role": "system", "content": AMBASSADOR_ROLE}]
+        default_factory=lambda: [
+            {"role": "system", "content": AMBASSADOR_SYSTEM_PROMPT}
+        ]
     )
     fake_user: Optional[FakeUser] = None
     matched_persona: Optional[str] = None

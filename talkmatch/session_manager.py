@@ -10,7 +10,7 @@ from .chat import ChatSession
 from .matcher import Matcher
 from .personas import PERSONAS, Persona
 from .storage import ChatStore, ProfileStore, BASE_DIR
-from .filters import UserFilter
+from .filters import UserFilter, ReadinessFilter
 
 
 class SessionManager:
@@ -27,7 +27,11 @@ class SessionManager:
         self.base_dir = base_dir
         self.ai_client_factory = ai_client_factory
         self.profile_store = ProfileStore(base_dir=base_dir / "profiles")
-        self.filters = filters or []
+        if filters is None:
+            readiness = ReadinessFilter(self.ai_client_factory(), self.profile_store)
+            self.filters = [readiness]
+        else:
+            self.filters = filters
         self.sessions: Dict[str, ChatSession] = {}
         self.matcher = Matcher(
             [p.name for p in personas], path=base_dir / "match_matrix.json"
@@ -59,7 +63,7 @@ class SessionManager:
                 session.set_persona(None)
                 continue
             top = [m for m in self.matcher.top_matches(persona.name, 1) if m[0] in users]
-            if top and top[0][1] > 0:
+            if top and top[0][1] > 0.5:
                 session.set_persona(top[0][0])
             else:
                 session.set_persona(None)
