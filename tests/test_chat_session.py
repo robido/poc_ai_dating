@@ -34,3 +34,15 @@ def test_chat_session_switch_to_fake_user(tmp_path):
     reply = session.send_client_message("Bob", "Hello")
     assert reply == "Hi I'm fake"
     assert (tmp_path / "Bob.txt").read_text().strip() == "Stored profile"
+
+
+def test_chat_session_tracks_persona_messages(tmp_path):
+    store = ProfileStore(base_dir=tmp_path)
+    (tmp_path / "Alex.txt").write_text("Profile", encoding="utf-8")
+    session = ChatSession(
+        ai_client=DummyAI(["Stored profile", "AI reply"]), profile_store=store
+    )
+    session.set_persona("Alex")
+    reply = session.send_client_message("Alice", "Hi")
+    assert reply == "AI reply"
+    assert session.persona_message_counts["Alex"] == 1
