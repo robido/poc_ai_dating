@@ -5,9 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
+import logging
 
 from .ai import AIClient
 from .profile import ProfileStore
+
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -42,7 +46,10 @@ class ReadinessEvaluator:
             return 0.0
 
     def is_ready(self, objectives: Sequence[str], profile: str) -> bool:
-        return self.score(objectives, profile) >= 80.0
+        score = self.score(objectives, profile)
+        ready = score >= 80.0
+        logger.info("Readiness result: score=%s ready=%s", score, ready)
+        return ready
 
 
 try:  # Import may be provided by another task.
