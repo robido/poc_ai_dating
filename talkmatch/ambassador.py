@@ -28,14 +28,14 @@ class Ambassador:
             self.state = "acting"
         else:
             self.state = "collecting_info"
-        logger.debug("set_persona: persona=%s state=%s", self.persona, self.state)
+        logger.info("set_persona: persona=%s state=%s", self.persona, self.state)
 
     def begin_link(self, other: str, context: str) -> None:
         """Enter linking mode with ``other`` using their recent context."""
         self.link_target = other
         self.link_context = context
         self.state = "linking"
-        logger.debug(
+        logger.info(
             "begin_link: target=%s context=%s state=%s",
             self.link_target,
             self.link_context,
@@ -45,13 +45,13 @@ class Ambassador:
     def finalize_link(self) -> None:
         """Move to linked mode once conversations converge."""
         self.state = "linked"
-        logger.debug("finalize_link: target=%s state=%s", self.link_target, self.state)
+        logger.info("finalize_link: target=%s state=%s", self.link_target, self.state)
 
     def declare_match(self, other: str) -> None:
         """Record that an official match has occurred with ``other``."""
         self.link_target = other
         self.state = "matched"
-        logger.debug("declare_match: target=%s state=%s", self.link_target, self.state)
+        logger.info("declare_match: target=%s state=%s", self.link_target, self.state)
 
     def status(self) -> str:
         """Return a descriptive label for the current state."""
